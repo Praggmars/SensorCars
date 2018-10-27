@@ -146,6 +146,7 @@
     <ClInclude Include="autoreleaseptr.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="car.h" />
+    <ClInclude Include="communication.h" />
     <ClInclude Include="entity.h" />
     <ClInclude Include="graphics.h" />
     <ClInclude Include="linalg.h" />
@@ -159,6 +160,7 @@
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="car.cpp" />
+    <ClCompile Include="communication.cpp" />
     <ClCompile Include="entity.cpp" />
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="main.cpp" />

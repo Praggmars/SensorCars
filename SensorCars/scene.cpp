@@ -101,7 +101,7 @@ namespace car
 		m_userCar.Init(&m_mdlCar, &m_mfCar, 0.0f, 0.0f, { 0.2f, 0.4f, 1.0f, 1.0f });
 		m_userCar.InitSensors(&m_mdlSensor);
 		m_envCars.push_back(CreateHitbox(&m_mfCar, &m_userCar));
-		ResetCars();
+		Restart();
 
 		m_envFloor.push_back(CreateHitbox(&m_mfPlain, &m_plain));
 		m_envFloor.push_back(CreateHitbox(&m_mfPath, &m_path));
@@ -115,6 +115,16 @@ namespace car
 
 	void Scene::Update(float deltaTime)
 	{
+		if (m_connection)
+		{
+			std::vector<char> data;
+			if (m_connection->FetchRecvData(data))
+			{
+				if (data.size() == 3 && data[0] == 'e'&&data[1] == 'n'&&data[2] == 'd')
+					PostQuitMessage(0);
+			}
+		}
+
 		m_camera.Update(deltaTime);
 		for (Car& c : m_cars)
 		{
@@ -169,7 +179,7 @@ namespace car
 		m_gfx.EndFrame();
 	}
 
-	void Scene::ResetCars()
+	void Scene::Restart()
 	{
 		mth::float3 pos;
 		for (Car& c : m_cars)
@@ -180,6 +190,27 @@ namespace car
 		}
 		m_userCar.position = { -3.0f, 0.0f, -2.0f };
 		m_userCar.rotation = { 0.0f, -mth::pi / 2.0f, 0.0f };
+	}
+
+	void Scene::StartConnection(LPCWSTR ip, LPCWSTR port)
+	{
+		try
+		{
+			m_connection = std::unique_ptr<com::Communication>(new com::Communication(ip, port));
+		}
+		catch (std::exception& e)
+		{
+			auto em = e.what();
+			std::wstring msg;
+			for (size_t i = 0; em[i]; i++)
+				msg += em[i];
+			MessageBox(NULL, msg.c_str(), L"Error", MB_OK | MB_ICONERROR);
+		};
+	}
+
+	void Scene::EndConnection()
+	{
+		m_connection.reset();
 	}
 
 	void Scene::Frame(float deltaTime)
@@ -209,7 +240,7 @@ namespace car
 				m_right = true;
 				break;
 			case 'R':
-				ResetCars();
+				Restart();
 				break;
 			case VK_ESCAPE:
 				PostQuitMessage(0);

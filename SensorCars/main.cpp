@@ -1,10 +1,61 @@
 #include "scene.h"
 #include <chrono>
 
+#define ID_BTN_CONNECT 10
+#define ID_BTN_DISCONNECT 11
+#define ID_BTN_RESTART 12
+#define ID_BTN_SEND 13
+
+std::unique_ptr<car::Scene> g_scene;
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
+	static HWND textBox_IP;
+	static HWND textBox_port;
+	static HWND textBox_message;
+	RECT rect;
+	WCHAR ipBuffer[16];
+	WCHAR portBuffer[16];
+	WCHAR msgBuffer[128];
+
 	switch (msg)
 	{
+	case WM_CREATE:
+		GetClientRect(hwnd, &rect);
+		textBox_IP = CreateWindow(L"edit", L"127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 20, 180, 30, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		textBox_port = CreateWindow(L"edit", L"1111", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 60, 180, 30, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		CreateWindow(L"button", L"Connect", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 100, 180, 40, hwnd, (HMENU)ID_BTN_CONNECT, GetModuleHandle(NULL), NULL);
+		CreateWindow(L"button", L"Disonnect", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 150, 180, 40, hwnd, (HMENU)ID_BTN_DISCONNECT, GetModuleHandle(NULL), NULL);
+		textBox_message = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 200, 180, 30, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		CreateWindow(L"button", L"Send", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 240, 180, 30, hwnd, (HMENU)ID_BTN_SEND, GetModuleHandle(NULL), NULL);
+		CreateWindow(L"button", L"Restart cars", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, rect.bottom - 300, 180, 40, hwnd, (HMENU)ID_BTN_RESTART, GetModuleHandle(NULL), NULL);
+		return 0;
+	case WM_COMMAND:
+		switch (wparam)
+		{
+		case ID_BTN_CONNECT:
+			GetWindowText(textBox_IP, ipBuffer, 16);
+			GetWindowText(textBox_port, portBuffer, 16);
+			g_scene->StartConnection(ipBuffer, portBuffer);
+			break;
+		case ID_BTN_DISCONNECT:
+			g_scene->EndConnection();
+			break;
+		case ID_BTN_RESTART:
+			g_scene->Restart();
+			break;
+		case ID_BTN_SEND:
+			if (g_scene->getConnection())
+			{
+				std::string msg;
+				GetWindowText(textBox_message, msgBuffer, 128);
+				for (int i = 0; msgBuffer[i]; i++)
+					msg += (char)msgBuffer[i];
+				g_scene->getConnection()->Send(msg.c_str(), msg.length());
+			}
+			break;
+		}
+		return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
@@ -35,6 +86,7 @@ HWND CreateAppWindow(HINSTANCE hInstance, INT iCmdShow, int width, int height)
 		rect.right - rect.left, rect.bottom - rect.top, nullptr, nullptr, hInstance, nullptr);
 	ShowWindow(appWindow, iCmdShow);
 	UpdateWindow(appWindow);
+
 	return appWindow;
 }
 
@@ -44,8 +96,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 	int height = 720;
 
 	HWND appWindow = CreateAppWindow(hInstance, iCmdShow, width, height);
-	car::Scene scene;
-	if (!scene.Init(appWindow, width, height))
+	g_scene = std::unique_ptr<car::Scene>(new car::Scene);
+	if (!g_scene->Init(appWindow, width, height))
 		return 0;
 
 	MSG msg{};
@@ -56,14 +108,15 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
-			scene.MessageHandler(msg);
+			g_scene->MessageHandler(msg);
 		}
 		else
 		{
 			auto currentTime = std::chrono::steady_clock::now();
-			scene.Frame(std::chrono::duration<float>(currentTime - prevTime).count());
+			g_scene->Frame(std::chrono::duration<float>(currentTime - prevTime).count());
 			prevTime = currentTime;
 		}
 	}
+	g_scene.release();
 	return (INT)msg.wParam;
 }
