@@ -10,20 +10,47 @@ namespace com
 	}
 	Communication::~Communication()
 	{
-		if (m_isConnectionOpen)
-		{
-			shutdown(m_socket, SD_SEND);
-			closesocket(m_socket);
-			WSACleanup();
-			m_recvBuffer.clear();
-			m_recvThread.release();
-			m_dataReady = false;
-			m_isConnectionOpen = false;
-		}
+		EndConnection();
 	}
 	Communication::Communication(LPCWSTR ip, LPCWSTR port)
 	{
 		ParseIP_Port(ip, port);
+		StartConnection();
+		WCHAR msg[] = { 0x3053,0x3093,0x306B,0x3061,0x306F,0x0 };
+		Send(msg);
+	}
+	void Communication::WaitForDataRecv()
+	{
+		while (m_isConnectionOpen)
+		{
+			int msgLen;
+			int tmp = sizeof(msgLen);
+			while (tmp > 0)
+				if (m_isConnectionOpen)
+				{
+					int result = recv(m_socket, &((char*)&msgLen)[sizeof(msgLen) - tmp], tmp, 0);
+					if (result > 0)
+						tmp -= result;
+					else
+						EndConnection();
+				}
+			m_dataReady = false;
+			m_recvBuffer.resize(msgLen);
+			tmp = msgLen;
+			while (tmp > 0)
+				if (m_isConnectionOpen)
+				{
+					int result = recv(m_socket, &m_recvBuffer[msgLen - tmp], tmp, 0);
+					if (result > 0)
+						tmp -= result;
+					else
+						EndConnection();
+				}
+			m_dataReady = true;
+		}
+	}
+	void Communication::StartConnection()
+	{
 		m_dataReady = false;
 		WSAData wsaData;
 		WORD DllVersion = MAKEWORD(2, 1);
@@ -39,30 +66,43 @@ namespace com
 			throw std::exception("Could not connect");
 		m_recvThread = std::unique_ptr<std::thread>(new std::thread([this]() {WaitForDataRecv(); }));
 		m_isConnectionOpen = true;
-
-		Send("213", 3);
 	}
-	void Communication::WaitForDataRecv()
-	{
-		while (m_isConnectionOpen)
-		{
-			int msgLen;
-			if (m_isConnectionOpen)
-				recv(m_socket, (char*)&msgLen, 4, 0);
-			m_dataReady = false;
-			m_recvBuffer.resize(msgLen);
-			if (m_isConnectionOpen)
-				recv(m_socket, m_recvBuffer.data(), msgLen, 0);
-			m_dataReady = true;
-		}
-	}
-	bool Communication::Send(const char *msg, int msgLen)
+	void Communication::EndConnection()
 	{
 		if (m_isConnectionOpen)
 		{
-			int tmp = 4;
-			send(m_socket, (char*)&msgLen, 4, 0);
-			send(m_socket, msg, msgLen, 0);
+			shutdown(m_socket, SD_SEND);
+			closesocket(m_socket);
+			WSACleanup();
+			m_recvBuffer.clear();
+			m_recvThread.release();
+			m_dataReady = false;
+			m_isConnectionOpen = false;
+		}
+	}
+	bool Communication::Send(std::wstring msg)
+	{
+		if (m_isConnectionOpen)
+		{
+			std::vector<char> data;
+			unsigned size = 8 + 2 * msg.length();
+			data.reserve(size);
+			char* b = (char*)&size;
+			for (int i = sizeof(size) - 1; i >= 0; i--)
+				data.push_back(b[i]);
+			size -= 8;
+			for (int i = sizeof(size) - 1; i >= 0; i--)
+				data.push_back(b[i]);
+			for (int i = 0; i < msg.length(); i++)
+			{
+				char* b = (char*)&msg[i];
+				data.push_back(b[1]);
+				data.push_back(b[0]);
+			}
+
+			int tmp = data.size();
+			while (tmp > 0)
+				tmp -= send(m_socket, &data[data.size() - tmp], tmp, 0);
 		}
 		return m_isConnectionOpen;
 	}

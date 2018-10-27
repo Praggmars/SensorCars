@@ -47,11 +47,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		case ID_BTN_SEND:
 			if (g_scene->getConnection())
 			{
-				std::string msg;
 				GetWindowText(textBox_message, msgBuffer, 128);
-				for (int i = 0; msgBuffer[i]; i++)
-					msg += (char)msgBuffer[i];
-				g_scene->getConnection()->Send(msg.c_str(), msg.length());
+				g_scene->getConnection()->Send(msgBuffer);
 			}
 			break;
 		}

@@ -221,6 +221,13 @@ namespace car
 
 	void Scene::MessageHandler(MSG& msg)
 	{
+		RECT rect;
+		GetClientRect(m_gfxScreen, &rect);
+		ScreenToClient(m_gfxScreen, &msg.pt);
+		if (msg.pt.x < rect.left || msg.pt.x > rect.right || msg.pt.y < rect.top || msg.pt.y > rect.bottom)
+		{
+			return;
+		}
 		m_camera.MessageHandler(msg);
 		switch (msg.message)
 		{

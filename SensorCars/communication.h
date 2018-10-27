@@ -25,11 +25,14 @@ namespace com
 	private:
 		void ParseIP_Port(LPCWSTR ip, LPCWSTR port);
 		void WaitForDataRecv();
+		void StartConnection();
+		void EndConnection();
 
 	public:
 		Communication(LPCWSTR ip, LPCWSTR port);
 		~Communication();
-		bool Send(const char* msg, int msgLen);
+		inline bool isOnline() { return m_isConnectionOpen; }
+		bool Send(std::wstring msg);
 		bool FetchRecvData(std::vector<char>& data);
 	};
 }
