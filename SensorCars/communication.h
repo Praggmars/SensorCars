@@ -13,8 +13,6 @@ namespace com
 {
 	class Communication
 	{
-		std::unique_ptr<std::thread> m_recvThread;
-		//std::unique_ptr<std::thread> m_sendThread;
 		bool m_dataReady;
 		std::vector<char> m_recvBuffer;
 		bool m_isConnectionOpen;

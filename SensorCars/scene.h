@@ -8,8 +8,6 @@ namespace car
 {
 	class Scene
 	{
-		std::unique_ptr<com::Communication> m_connection;
-
 		HWND m_owner;
 		HWND m_gfxScreen;
 		gfx::Graphics m_gfx; 
@@ -43,15 +41,14 @@ namespace car
 		bool LoadPlain(ID3D11Device *device);
 		bool LoadSensor(ID3D11Device *device);
 		bool LoadCar(ID3D11Device *device);
-		HWND CreateGfxScreen(int width, int height);
+		HWND CreateGfxScreen(RECT position);
 		Hitbox CreateHitbox(std::vector<mth::Triangle> *modelFrame, gfx::Entity *entity);
 
 		void Update(float deltaTime);
 		void Render();
 
 	public:
-		bool Init(HWND owner, int width, int height);
-
+		bool Init(HWND owner, RECT position);
 
 		void Frame(float deltaTime);
 		void MessageHandler(MSG& msg);
@@ -59,9 +56,5 @@ namespace car
 
 		inline Car& getCar(size_t index) { return m_cars[index]; }
 		inline Car& getUserCar() { return m_userCar; }
-
-		void StartConnection(LPCWSTR ip, LPCWSTR port);
-		void EndConnection();
-		inline com::Communication* getConnection() { return m_connection.get(); }
 	};
 }

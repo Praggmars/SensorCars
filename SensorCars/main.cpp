@@ -2,17 +2,22 @@
 #include <chrono>
 
 #define ID_BTN_CONNECT 10
-#define ID_BTN_DISCONNECT 11
 #define ID_BTN_RESTART 12
 #define ID_BTN_SEND 13
+#define ID_TIMER1 100
 
 std::unique_ptr<car::Scene> g_scene;
+std::unique_ptr<com::Communication> g_connection;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	static HWND textBox_IP;
 	static HWND textBox_port;
-	static HWND textBox_message;
+	static HWND label_status;
+	static HWND button_conn;
+	static HWND textBox_inMsg;
+	static HWND textBox_outMsg;
+	std::vector<char> data;
 	RECT rect;
 	WCHAR ipBuffer[16];
 	WCHAR portBuffer[16];
@@ -22,35 +27,88 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 	case WM_CREATE:
 		GetClientRect(hwnd, &rect);
-		textBox_IP = CreateWindow(L"edit", L"127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 20, 180, 30, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		textBox_port = CreateWindow(L"edit", L"1111", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 60, 180, 30, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		CreateWindow(L"button", L"Connect", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 100, 180, 40, hwnd, (HMENU)ID_BTN_CONNECT, GetModuleHandle(NULL), NULL);
-		CreateWindow(L"button", L"Disonnect", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 150, 180, 40, hwnd, (HMENU)ID_BTN_DISCONNECT, GetModuleHandle(NULL), NULL);
-		textBox_message = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 200, 180, 30, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		CreateWindow(L"button", L"Send", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, 240, 180, 30, hwnd, (HMENU)ID_BTN_SEND, GetModuleHandle(NULL), NULL);
-		CreateWindow(L"button", L"Restart cars", WS_CHILD | WS_VISIBLE | WS_BORDER, rect.right - 190, rect.bottom - 300, 180, 40, hwnd, (HMENU)ID_BTN_RESTART, GetModuleHandle(NULL), NULL);
+
+		CreateWindow(L"static", L"IP:", WS_CHILD | WS_VISIBLE, 10, 10, 50, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		textBox_IP = CreateWindow(L"edit", L"127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER, 70, 10, 120, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		CreateWindow(L"static", L"port:", WS_CHILD | WS_VISIBLE, 10, 40, 50, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		textBox_port = CreateWindow(L"edit", L"213", WS_CHILD | WS_VISIBLE | WS_BORDER, 70, 40, 120, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		label_status = CreateWindow(L"static", L"Offline", WS_CHILD | WS_VISIBLE, 10, 70, 50, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		button_conn = CreateWindow(L"button", L"Connect", WS_CHILD | WS_VISIBLE | WS_BORDER, 70, 70, 120, 22, hwnd, (HMENU)ID_BTN_CONNECT, GetModuleHandle(NULL), NULL);
+
+		CreateWindow(L"static", L"Incoming", WS_CHILD | WS_VISIBLE, 10, 100, 180, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		textBox_inMsg = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_READONLY | ES_MULTILINE, 10, 124, 180, 60, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		CreateWindow(L"static", L"Outgoing", WS_CHILD | WS_VISIBLE, 10, 190, 180, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		textBox_outMsg = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_MULTILINE, 10, 214, 180, 60, hwnd, NULL, GetModuleHandle(NULL), NULL);
+		CreateWindow(L"button", L"Send", WS_CHILD | WS_VISIBLE | WS_BORDER, 10, 276, 180, 30, hwnd, (HMENU)ID_BTN_SEND, GetModuleHandle(NULL), NULL);
+
+		CreateWindow(L"button", L"Restart cars", WS_CHILD | WS_VISIBLE | WS_BORDER, 10, rect.bottom - 300, 180, 40, hwnd, (HMENU)ID_BTN_RESTART, GetModuleHandle(NULL), NULL);
+
+		return 0;
+	case WM_TIMER:
+		if (g_connection && g_connection->FetchRecvData(data))
+		{
+			std::wstring str;
+			for (int i = 4; i < data.size() / 2; i++)
+			{
+				WCHAR ch = data[2 * i + 1] + data[2 * i] * 0x100;
+				str += ch;
+			}
+			SetWindowText(textBox_inMsg, str.c_str());
+		}
 		return 0;
 	case WM_COMMAND:
 		switch (wparam)
 		{
 		case ID_BTN_CONNECT:
-			GetWindowText(textBox_IP, ipBuffer, 16);
-			GetWindowText(textBox_port, portBuffer, 16);
-			g_scene->StartConnection(ipBuffer, portBuffer);
-			break;
-		case ID_BTN_DISCONNECT:
-			g_scene->EndConnection();
+			if (g_connection)
+			{
+				g_connection.reset();
+				KillTimer(hwnd, ID_TIMER1);
+				SetWindowText(label_status, L"Offline");
+				SetWindowText(button_conn, L"Connect");
+			}
+			else
+			{
+				GetWindowText(textBox_IP, ipBuffer, 16);
+				GetWindowText(textBox_port, portBuffer, 16);
+				try
+				{
+					g_connection = std::unique_ptr<com::Communication>(new com::Communication(ipBuffer, portBuffer));
+					SetTimer(hwnd, ID_TIMER1, 100, NULL);
+					SetWindowText(label_status, L"Online");
+					SetWindowText(button_conn, L"Disconnect");
+				}
+				catch (std::exception& e)
+				{
+					auto em = e.what();
+					std::wstring msg;
+					for (size_t i = 0; em[i]; i++)
+						msg += em[i];
+					MessageBox(NULL, msg.c_str(), L"Error", MB_OK | MB_ICONERROR);
+				};
+			}
 			break;
 		case ID_BTN_RESTART:
 			g_scene->Restart();
 			break;
 		case ID_BTN_SEND:
-			if (g_scene->getConnection())
+			if (g_connection)
 			{
-				GetWindowText(textBox_message, msgBuffer, 128);
-				g_scene->getConnection()->Send(msgBuffer);
+				GetWindowText(textBox_outMsg, msgBuffer, 128);
+				g_connection->Send(msgBuffer);
 			}
 			break;
+		}
+		return 0;
+	case WM_SIZE:
+		GetClientRect(hwnd, &rect);
+		rect.left += 200;
+		if (rect.left < rect.right&&rect.top < rect.bottom)
+		{
+			g_scene.reset();
+			g_scene = std::unique_ptr<car::Scene>(new car::Scene);
+			if (!g_scene->Init(hwnd, rect))
+				PostQuitMessage(0);
 		}
 		return 0;
 	case WM_DESTROY:
@@ -93,9 +151,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 	int height = 720;
 
 	HWND appWindow = CreateAppWindow(hInstance, iCmdShow, width, height);
+	/*RECT rect;
 	g_scene = std::unique_ptr<car::Scene>(new car::Scene);
-	if (!g_scene->Init(appWindow, width, height))
-		return 0;
+	GetClientRect(appWindow, &rect);
+	rect.left += 200;
+	if (!g_scene->Init(appWindow, rect))
+		return 0;*/
 
 	MSG msg{};
 	auto prevTime = std::chrono::steady_clock::now();

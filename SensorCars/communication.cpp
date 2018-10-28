@@ -28,15 +28,20 @@ namespace com
 			while (tmp > 0)
 				if (m_isConnectionOpen)
 				{
-					int result = recv(m_socket, &((char*)&msgLen)[sizeof(msgLen) - tmp], tmp, 0);
+					char len[4];
+					int result = recv(m_socket, &len[sizeof(msgLen) - tmp], tmp, 0);
+					msgLen = ((len[0] * 0x100 + len[1]) * 0x100 + len[2]) * 0x100 + len[3];
 					if (result > 0)
 						tmp -= result;
 					else
+					{
 						EndConnection();
+						return;
+					}
 				}
 			m_dataReady = false;
 			m_recvBuffer.resize(msgLen);
-			tmp = msgLen;
+			tmp = msgLen - sizeof(msgLen);
 			while (tmp > 0)
 				if (m_isConnectionOpen)
 				{
@@ -44,7 +49,10 @@ namespace com
 					if (result > 0)
 						tmp -= result;
 					else
+					{
 						EndConnection();
+						return;
+					}
 				}
 			m_dataReady = true;
 		}
@@ -64,8 +72,9 @@ namespace com
 		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (connect(m_socket, (SOCKADDR*)&addr, addrlen) != 0)
 			throw std::exception("Could not connect");
-		m_recvThread = std::unique_ptr<std::thread>(new std::thread([this]() {WaitForDataRecv(); }));
 		m_isConnectionOpen = true;
+		std::thread th([this]() {WaitForDataRecv(); });
+		th.detach();
 	}
 	void Communication::EndConnection()
 	{
@@ -75,7 +84,6 @@ namespace com
 			closesocket(m_socket);
 			WSACleanup();
 			m_recvBuffer.clear();
-			m_recvThread.release();
 			m_dataReady = false;
 			m_isConnectionOpen = false;
 		}
@@ -93,7 +101,7 @@ namespace com
 			size -= 8;
 			for (int i = sizeof(size) - 1; i >= 0; i--)
 				data.push_back(b[i]);
-			for (int i = 0; i < msg.length(); i++)
+			for (int i = 0; i < (int)msg.length(); i++)
 			{
 				char* b = (char*)&msg[i];
 				data.push_back(b[1]);
@@ -109,7 +117,11 @@ namespace com
 	bool Communication::FetchRecvData(std::vector<char>& data)
 	{
 		if (m_dataReady)
+		{
 			data = m_recvBuffer;
-		return m_dataReady;
+			m_dataReady = false;
+			return true;
+		}
+		return false;
 	}
 }

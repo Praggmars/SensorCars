@@ -49,7 +49,7 @@ namespace car
 	{
 		return LoadEntity(device, L"resources/car.mdl", &m_mdlCar, &m_mfCar);
 	}
-	HWND Scene::CreateGfxScreen(int width, int height)
+	HWND Scene::CreateGfxScreen(RECT position)
 	{
 		WNDCLASSEX wc{};
 		wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
@@ -63,7 +63,8 @@ namespace car
 		wc.cbSize = sizeof(WNDCLASSEX);
 		RegisterClassEx(&wc);
 		HWND gfxScreen = CreateWindowEx(WS_EX_APPWINDOW, L"GfxWindow", L"GfxWindow", WS_CHILD | WS_VISIBLE,
-			0, 0, width, height, m_owner, nullptr, wc.hInstance, nullptr);
+			position.left, position.top, position.right - position.left, position.bottom - position.top,
+			m_owner, nullptr, wc.hInstance, nullptr);
 		ShowWindow(gfxScreen, SW_SHOW);
 		return gfxScreen;
 	}
@@ -77,10 +78,12 @@ namespace car
 		return hitbox;
 	}
 
-	bool Scene::Init(HWND owner, int width, int height)
+	bool Scene::Init(HWND owner, RECT position)
 	{
 		m_owner = owner;
-		m_gfxScreen = CreateGfxScreen(width - 200, height);
+		int width = position.right - position.left;
+		int height = position.bottom - position.top;
+		m_gfxScreen = CreateGfxScreen(position);
 		if (!m_gfx.Init(m_gfxScreen, width, height))
 			return false;
 		if (!m_material.Init(m_gfx.getDevice()))
@@ -115,16 +118,6 @@ namespace car
 
 	void Scene::Update(float deltaTime)
 	{
-		if (m_connection)
-		{
-			std::vector<char> data;
-			if (m_connection->FetchRecvData(data))
-			{
-				if (data.size() == 3 && data[0] == 'e'&&data[1] == 'n'&&data[2] == 'd')
-					PostQuitMessage(0);
-			}
-		}
-
 		m_camera.Update(deltaTime);
 		for (Car& c : m_cars)
 		{
@@ -190,27 +183,6 @@ namespace car
 		}
 		m_userCar.position = { -3.0f, 0.0f, -2.0f };
 		m_userCar.rotation = { 0.0f, -mth::pi / 2.0f, 0.0f };
-	}
-
-	void Scene::StartConnection(LPCWSTR ip, LPCWSTR port)
-	{
-		try
-		{
-			m_connection = std::unique_ptr<com::Communication>(new com::Communication(ip, port));
-		}
-		catch (std::exception& e)
-		{
-			auto em = e.what();
-			std::wstring msg;
-			for (size_t i = 0; em[i]; i++)
-				msg += em[i];
-			MessageBox(NULL, msg.c_str(), L"Error", MB_OK | MB_ICONERROR);
-		};
-	}
-
-	void Scene::EndConnection()
-	{
-		m_connection.reset();
 	}
 
 	void Scene::Frame(float deltaTime)
