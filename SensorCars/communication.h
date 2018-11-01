@@ -11,6 +11,31 @@
 
 namespace com
 {
+	enum class MessageType :int
+	{
+		STRING,
+		COMMAND,
+		CARDIAG
+	};
+	enum class CommandType :int
+	{
+		FORWARD,
+		BACKWARD,
+		NOMOVE,
+		LEFT,
+		RIGHT,
+		NOSTEERING,
+		RESET,
+		AUTOMODE
+	};
+	struct CarDiagnosticData
+	{
+		int carID;
+		float distanceSensorSignal[2];
+		float lightSensorSignal[6];
+		int collidedWith;
+	};
+
 	class Communication
 	{
 		bool m_dataReady;
@@ -31,6 +56,7 @@ namespace com
 		~Communication();
 		inline bool isOnline() { return m_isConnectionOpen; }
 		bool Send(std::wstring msg);
+		bool Send(CarDiagnosticData data);
 		bool FetchRecvData(std::vector<char>& data);
 	};
 }

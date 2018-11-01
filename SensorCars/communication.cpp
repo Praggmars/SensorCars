@@ -93,14 +93,22 @@ namespace com
 		if (m_isConnectionOpen)
 		{
 			std::vector<char> data;
-			unsigned size = 8 + 2 * msg.length();
+			int size = 12 + 2 * (int)msg.length();
 			data.reserve(size);
 			char* b = (char*)&size;
 			for (int i = sizeof(size) - 1; i >= 0; i--)
 				data.push_back(b[i]);
-			size -= 8;
+
+			int msgType = (int)MessageType::STRING;
+			b = (char*)&msgType;
+			for (int i = sizeof(msgType) - 1; i >= 0; i--)
+				data.push_back(b[i]);
+
+			size -= 12;
+			b = (char*)&size;
 			for (int i = sizeof(size) - 1; i >= 0; i--)
 				data.push_back(b[i]);
+
 			for (int i = 0; i < (int)msg.length(); i++)
 			{
 				char* b = (char*)&msg[i];
@@ -108,11 +116,15 @@ namespace com
 				data.push_back(b[0]);
 			}
 
-			int tmp = data.size();
+			int tmp = (int)data.size();
 			while (tmp > 0)
 				tmp -= send(m_socket, &data[data.size() - tmp], tmp, 0);
 		}
 		return m_isConnectionOpen;
+	}
+	bool Communication::Send(CarDiagnosticData data)
+	{
+		return false;
 	}
 	bool Communication::FetchRecvData(std::vector<char>& data)
 	{

@@ -30,13 +30,8 @@ namespace car
 
 		gfx::Camera m_camera;
 
-		bool m_forward;
-		bool m_back;
-		bool m_left;
-		bool m_right;
-
 	private:
-		bool LoadEntity(ID3D11Device *device, LPCWSTR filename, gfx::Model * model, std::vector<mth::Triangle> *m_modelFrame);
+		bool LoadEntity(ID3D11Device *device, LPCWSTR filename, gfx::Model *model, std::vector<mth::Triangle> *m_modelFrame);
 		bool LoadPath(ID3D11Device *device);
 		bool LoadPlain(ID3D11Device *device);
 		bool LoadSensor(ID3D11Device *device);
@@ -56,5 +51,11 @@ namespace car
 
 		inline Car& getCar(size_t index) { return m_cars[index]; }
 		inline Car& getUserCar() { return m_userCar; }
+
+		bool m_forward;
+		bool m_back;
+		bool m_left;
+		bool m_right;
+
 	};
 }

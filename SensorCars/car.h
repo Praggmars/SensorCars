@@ -23,7 +23,9 @@ namespace car
 		inline void setSteering(float steering) { m_steering = steering; }
 
 		inline Sensor& getLightSensor(UINT index) { return m_lightSensors[index]; }
+		inline int getLightSensorCount() { return (int)m_lightSensors.size(); }
 		inline Sensor& getDistanceSensor(UINT index) { return m_distanceSensors[index]; }
+		inline int getDistanceSensorCount() { return (int)m_distanceSensors.size(); }
 
 		void RenderSensors(ID3D11DeviceContext *context, mth::matrix matrixBuffer[], gfx::Material& material);
 

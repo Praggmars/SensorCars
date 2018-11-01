@@ -1,104 +1,32 @@
 #include "scene.h"
+#include "diagnostics.h"
 #include <chrono>
 
-#define ID_BTN_CONNECT 10
-#define ID_BTN_RESTART 12
-#define ID_BTN_SEND 13
-#define ID_TIMER1 100
+#define ID_BTN_RESTART 10
 
 std::unique_ptr<car::Scene> g_scene;
-std::unique_ptr<com::Communication> g_connection;
+diag::Diagnostics g_diagnostics;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-	static HWND textBox_IP;
-	static HWND textBox_port;
-	static HWND label_status;
-	static HWND button_conn;
-	static HWND textBox_inMsg;
-	static HWND textBox_outMsg;
-	std::vector<char> data;
 	RECT rect;
-	WCHAR ipBuffer[16];
-	WCHAR portBuffer[16];
-	WCHAR msgBuffer[128];
 
 	switch (msg)
 	{
 	case WM_CREATE:
 		GetClientRect(hwnd, &rect);
-
-		CreateWindow(L"static", L"IP:", WS_CHILD | WS_VISIBLE, 10, 10, 50, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		textBox_IP = CreateWindow(L"edit", L"127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER, 70, 10, 120, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		CreateWindow(L"static", L"port:", WS_CHILD | WS_VISIBLE, 10, 40, 50, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		textBox_port = CreateWindow(L"edit", L"213", WS_CHILD | WS_VISIBLE | WS_BORDER, 70, 40, 120, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		label_status = CreateWindow(L"static", L"Offline", WS_CHILD | WS_VISIBLE, 10, 70, 50, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		button_conn = CreateWindow(L"button", L"Connect", WS_CHILD | WS_VISIBLE | WS_BORDER, 70, 70, 120, 22, hwnd, (HMENU)ID_BTN_CONNECT, GetModuleHandle(NULL), NULL);
-
-		CreateWindow(L"static", L"Incoming", WS_CHILD | WS_VISIBLE, 10, 100, 180, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		textBox_inMsg = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_READONLY | ES_MULTILINE, 10, 124, 180, 60, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		CreateWindow(L"static", L"Outgoing", WS_CHILD | WS_VISIBLE, 10, 190, 180, 22, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		textBox_outMsg = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_MULTILINE, 10, 214, 180, 60, hwnd, NULL, GetModuleHandle(NULL), NULL);
-		CreateWindow(L"button", L"Send", WS_CHILD | WS_VISIBLE | WS_BORDER, 10, 276, 180, 30, hwnd, (HMENU)ID_BTN_SEND, GetModuleHandle(NULL), NULL);
-
+		g_diagnostics.CreateGUI(hwnd);
 		CreateWindow(L"button", L"Restart cars", WS_CHILD | WS_VISIBLE | WS_BORDER, 10, rect.bottom - 300, 180, 40, hwnd, (HMENU)ID_BTN_RESTART, GetModuleHandle(NULL), NULL);
 
 		return 0;
 	case WM_TIMER:
-		if (g_connection && g_connection->FetchRecvData(data))
-		{
-			std::wstring str;
-			for (int i = 4; i < data.size() / 2; i++)
-			{
-				WCHAR ch = data[2 * i + 1] + data[2 * i] * 0x100;
-				str += ch;
-			}
-			SetWindowText(textBox_inMsg, str.c_str());
-		}
+		g_diagnostics.UpdateGUI();
 		return 0;
 	case WM_COMMAND:
-		switch (wparam)
-		{
-		case ID_BTN_CONNECT:
-			if (g_connection)
-			{
-				g_connection.reset();
-				KillTimer(hwnd, ID_TIMER1);
-				SetWindowText(label_status, L"Offline");
-				SetWindowText(button_conn, L"Connect");
-			}
-			else
-			{
-				GetWindowText(textBox_IP, ipBuffer, 16);
-				GetWindowText(textBox_port, portBuffer, 16);
-				try
-				{
-					g_connection = std::unique_ptr<com::Communication>(new com::Communication(ipBuffer, portBuffer));
-					SetTimer(hwnd, ID_TIMER1, 100, NULL);
-					SetWindowText(label_status, L"Online");
-					SetWindowText(button_conn, L"Disconnect");
-				}
-				catch (std::exception& e)
-				{
-					auto em = e.what();
-					std::wstring msg;
-					for (size_t i = 0; em[i]; i++)
-						msg += em[i];
-					MessageBox(NULL, msg.c_str(), L"Error", MB_OK | MB_ICONERROR);
-				};
-			}
-			break;
-		case ID_BTN_RESTART:
+		if (wparam == ID_BTN_RESTART)
 			g_scene->Restart();
-			break;
-		case ID_BTN_SEND:
-			if (g_connection)
-			{
-				GetWindowText(textBox_outMsg, msgBuffer, 128);
-				g_connection->Send(msgBuffer);
-			}
-			break;
-		}
+		else
+			g_diagnostics.CommandAction(hwnd, (UINT)wparam);
 		return 0;
 	case WM_SIZE:
 		GetClientRect(hwnd, &rect);
@@ -110,6 +38,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			if (!g_scene->Init(hwnd, rect))
 				PostQuitMessage(0);
 		}
+		if (g_scene)
+			g_diagnostics.setScene(g_scene.get());
 		return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
