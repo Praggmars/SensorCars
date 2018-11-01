@@ -2,7 +2,6 @@
 
 #define ID_BTN_CONNECT 20
 #define ID_BTN_SEND 21
-#define ID_TIMER1 100
 
 namespace diag
 {
@@ -16,11 +15,80 @@ namespace diag
 			data.distanceSensorSignal[i] = m_target->getDistanceSensor(i).getMeasurement();
 		data.collidedWith = 0;
 	}
-	void Diagnostics::ActReceivedCommand(com::CommandType cmd)
+	void Diagnostics::DisconnectFromServer()
 	{
+		EndDiagnostics();
+	}
+	void Diagnostics::ConnectToServer()
+	{
+		try
+		{
+			WCHAR ipBuffer[16];
+			WCHAR portBuffer[16];
+			GetWindowText(m_textBox_IP, ipBuffer, 16);
+			GetWindowText(m_textBox_port, portBuffer, 16);
+			StartDiagnostic(ipBuffer, portBuffer);
+		}
+		catch (std::exception& e)
+		{
+			auto em = e.what();
+			std::wstring msg;
+			for (size_t i = 0; em[i]; i++)
+				msg += em[i];
+			MessageBox(NULL, msg.c_str(), L"Error", MB_OK | MB_ICONERROR);
+		};
+	}
+	void Diagnostics::ProcessMessage(std::vector<char>& data)
+	{
+		int msgType = com::ReadFlipBytes<int>(0, data);
+		switch (msgType)
+		{
+		case (int)com::MessageType::STRING:
+			RecvString(data);
+			break;
+		case (int)com::MessageType::COMMAND:
+			RecvCommand(data);
+			break;
+		}
+	}
+	void Diagnostics::RecvString(std::vector<char>& data)
+	{
+		std::wstring str;
+		for (int i = 4; i < (int)data.size() / 2; i++)
+		{
+			WCHAR ch = data[2 * i + 1] + data[2 * i] * 0x100;
+			str += ch;
+		}
+		SetWindowText(m_textBox_inMsg, str.c_str());
+	}
+	void Diagnostics::RecvCommand(std::vector<char>& data)
+	{
+		int cmd = com::ReadFlipBytes<int>(4, data);
 		switch (cmd)
 		{
-		case com::CommandType::AUTOMODE:
+		case (int)com::CommandType::FORWARD:
+			m_scene->setCarSpeed(1);
+			break;
+		case (int)com::CommandType::BACKWARD:
+			m_scene->setCarSpeed(-1);
+			break;
+		case (int)com::CommandType::NOMOVE:
+			m_scene->setCarSpeed(0);
+			break;
+		case (int)com::CommandType::LEFT:
+			m_scene->setCarSteering(-1);
+			break;
+		case (int)com::CommandType::RIGHT:
+			m_scene->setCarSteering(1);
+			break;
+		case (int)com::CommandType::NOSTEERING:
+			m_scene->setCarSteering(0);
+			break;
+		case (int)com::CommandType::RESET:
+			m_scene->Restart();
+			break;
+		case (int)com::CommandType::AUTOMODE:
+			m_scene->SwitchCarPilotAutoManual();
 			break;
 		}
 	}
@@ -36,14 +104,12 @@ namespace diag
 	void Diagnostics::StartDiagnostic(LPCWSTR ip, LPCWSTR port)
 	{
 		m_connection = std::unique_ptr<com::Communication>(new com::Communication(ip, port));
-		SetTimer(m_window, ID_TIMER1, 100, NULL);
 		SetWindowText(m_label_status, L"Online");
 		SetWindowText(m_button_conn, L"Disconnect");
 	}
 	void Diagnostics::EndDiagnostics()
 	{
 		m_target = nullptr;
-		KillTimer(m_window, ID_TIMER1);
 		SetWindowText(m_label_status, L"Offline");
 		SetWindowText(m_button_conn, L"Connect");
 		m_connection.reset();
@@ -67,91 +133,15 @@ namespace diag
 		m_textBox_outMsg = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_MULTILINE, 10, 214, 180, 60, hwnd, NULL, GetModuleHandle(NULL), NULL);
 		CreateWindow(L"button", L"Send", WS_CHILD | WS_VISIBLE | WS_BORDER, 10, 276, 180, 30, hwnd, (HMENU)ID_BTN_SEND, GetModuleHandle(NULL), NULL);
 	}
-	void Diagnostics::UpdateGUI()
-	{
-		if (m_connection->isOnline())
-		{
-			std::vector<char> data;
-			if (m_connection->FetchRecvData(data))
-			{
-				std::wstring str;
-				int msgType = ((data[4] * 0x100 + data[5]) * 0x100 + data[6]) * 0x100 + data[7];
-				if (msgType == (int)com::MessageType::STRING)
-				{
-					for (int i = 6; i < (int)data.size() / 2; i++)
-					{
-						WCHAR ch = data[2 * i + 1] + data[2 * i] * 0x100;
-						str += ch;
-					}
-					SetWindowText(m_textBox_inMsg, str.c_str());
-				}
-				if (msgType == (int)com::MessageType::COMMAND)
-				{
-					int cmd = ((data[8] * 0x100 + data[9]) * 0x100 + data[10]) * 0x100 + data[11];
-					switch (cmd)
-					{
-					case (int)com::CommandType::FORWARD:
-						m_scene->m_forward = true;
-						m_scene->m_back = false;
-						break;
-					case (int)com::CommandType::BACKWARD:
-						m_scene->m_forward = false;
-						m_scene->m_back = true;
-						break;
-					case (int)com::CommandType::NOMOVE:
-						m_scene->m_forward = false;
-						m_scene->m_back = false;
-						break;
-					case (int)com::CommandType::LEFT:
-						m_scene->m_left = true;
-						m_scene->m_right = false;
-						break;
-					case (int)com::CommandType::RIGHT:
-						m_scene->m_left = false;
-						m_scene->m_right = true;
-						break;
-					case (int)com::CommandType::NOSTEERING:
-						m_scene->m_left = false;
-						m_scene->m_right = false;
-						break;
-					case (int)com::CommandType::RESET:
-						m_scene->Restart();
-						break;
-					}
-				}
-			}
-		}
-		else
-			EndDiagnostics();
-	}
 	void Diagnostics::CommandAction(HWND hwnd, UINT btnID)
 	{
 		switch (btnID)
 		{
 		case ID_BTN_CONNECT:
 			if (m_connection && m_connection->isOnline())
-			{
-				EndDiagnostics();
-			}
+				DisconnectFromServer();
 			else
-			{
-				WCHAR ipBuffer[16];
-				WCHAR portBuffer[16];
-				GetWindowText(m_textBox_IP, ipBuffer, 16);
-				GetWindowText(m_textBox_port, portBuffer, 16);
-				try
-				{
-					StartDiagnostic(ipBuffer, portBuffer);
-				}
-				catch (std::exception& e)
-				{
-					auto em = e.what();
-					std::wstring msg;
-					for (size_t i = 0; em[i]; i++)
-						msg += em[i];
-					MessageBox(NULL, msg.c_str(), L"Error", MB_OK | MB_ICONERROR);
-				};
-			}
+				ConnectToServer();
 			break;
 		case ID_BTN_SEND:
 			if (m_connection && m_connection->isOnline())
@@ -161,6 +151,18 @@ namespace diag
 				m_connection->Send(msgBuffer);
 			}
 			break;
+		}
+	}
+	void Diagnostics::MessageReceived(std::vector<char> *buffer)
+	{
+		if (buffer == nullptr)
+		{
+			EndDiagnostics();
+		}
+		else
+		{
+			ProcessMessage(*buffer);
+			delete buffer;
 		}
 	}
 }

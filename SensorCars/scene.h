@@ -30,6 +30,12 @@ namespace car
 
 		gfx::Camera m_camera;
 
+		bool m_forward;
+		bool m_back;
+		bool m_left;
+		bool m_right;
+		bool m_autoControl;
+
 	private:
 		bool LoadEntity(ID3D11Device *device, LPCWSTR filename, gfx::Model *model, std::vector<mth::Triangle> *m_modelFrame);
 		bool LoadPath(ID3D11Device *device);
@@ -38,6 +44,8 @@ namespace car
 		bool LoadCar(ID3D11Device *device);
 		HWND CreateGfxScreen(RECT position);
 		Hitbox CreateHitbox(std::vector<mth::Triangle> *modelFrame, gfx::Entity *entity);
+
+		void ControlUserCarManual(float deltaTime);
 
 		void Update(float deltaTime);
 		void Render();
@@ -52,10 +60,8 @@ namespace car
 		inline Car& getCar(size_t index) { return m_cars[index]; }
 		inline Car& getUserCar() { return m_userCar; }
 
-		bool m_forward;
-		bool m_back;
-		bool m_left;
-		bool m_right;
-
+		void setCarSpeed(int s);
+		void setCarSteering(int s);
+		void SwitchCarPilotAutoManual();
 	};
 }

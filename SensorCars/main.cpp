@@ -3,7 +3,9 @@
 #include <chrono>
 
 #define ID_BTN_RESTART 10
+#define ID_BTN_AUTOMODE 11
 
+HWND g_appWindow;
 std::unique_ptr<car::Scene> g_scene;
 diag::Diagnostics g_diagnostics;
 
@@ -16,17 +18,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_CREATE:
 		GetClientRect(hwnd, &rect);
 		g_diagnostics.CreateGUI(hwnd);
-		CreateWindow(L"button", L"Restart cars", WS_CHILD | WS_VISIBLE | WS_BORDER, 10, rect.bottom - 300, 180, 40, hwnd, (HMENU)ID_BTN_RESTART, GetModuleHandle(NULL), NULL);
-
+		CreateWindow(L"button", L"Restart cars", WS_CHILD | WS_VISIBLE | WS_BORDER, 10, rect.bottom - 300, 90, 40, hwnd, (HMENU)ID_BTN_RESTART, GetModuleHandle(NULL), NULL);
+		CreateWindow(L"button", L"Auto mode", WS_CHILD | WS_VISIBLE | WS_BORDER, 110, rect.bottom - 300, 80, 40, hwnd, (HMENU)ID_BTN_AUTOMODE, GetModuleHandle(NULL), NULL);
 		return 0;
-	case WM_TIMER:
-		g_diagnostics.UpdateGUI();
+	case WM_RECVMSG:
+		g_diagnostics.MessageReceived((std::vector<char>*)lparam);
 		return 0;
 	case WM_COMMAND:
-		if (wparam == ID_BTN_RESTART)
+		switch (wparam)
+		{
+		case ID_BTN_RESTART:
 			g_scene->Restart();
-		else
+			break;
+		case ID_BTN_AUTOMODE:
+			g_scene->SwitchCarPilotAutoManual();
+			break;
+		default:
 			g_diagnostics.CommandAction(hwnd, (UINT)wparam);
+		}
 		return 0;
 	case WM_SIZE:
 		GetClientRect(hwnd, &rect);
@@ -80,7 +89,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 	int width = 1280;
 	int height = 720;
 
-	HWND appWindow = CreateAppWindow(hInstance, iCmdShow, width, height);
+	g_appWindow = CreateAppWindow(hInstance, iCmdShow, width, height);
 	/*RECT rect;
 	g_scene = std::unique_ptr<car::Scene>(new car::Scene);
 	GetClientRect(appWindow, &rect);

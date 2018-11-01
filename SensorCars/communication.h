@@ -9,6 +9,8 @@
 
 #pragma comment(lib,"ws2_32.lib")
 
+#define WM_RECVMSG WM_USER+10
+
 namespace com
 {
 	enum class MessageType :int
@@ -38,8 +40,6 @@ namespace com
 
 	class Communication
 	{
-		bool m_dataReady;
-		std::vector<char> m_recvBuffer;
 		bool m_isConnectionOpen;
 		std::string m_ip;
 		int m_port;
@@ -48,6 +48,7 @@ namespace com
 	private:
 		void ParseIP_Port(LPCWSTR ip, LPCWSTR port);
 		void WaitForDataRecv();
+		bool RecvData(char *buffer, int length);
 		void StartConnection();
 		void EndConnection();
 
@@ -57,6 +58,34 @@ namespace com
 		inline bool isOnline() { return m_isConnectionOpen; }
 		bool Send(std::wstring msg);
 		bool Send(CarDiagnosticData data);
-		bool FetchRecvData(std::vector<char>& data);
 	};
+
+	template <typename T>
+	T FlipBytes(T t)
+	{
+		T tmp;
+		char *btmp = (char*)&tmp;
+		char *bt = (char*)&t;
+		for (int i = 0; i < sizeof(T); i++)
+			btmp[i] = bt[sizeof(T) - 1 - i];
+		return tmp;
+	}
+
+	template <typename T>
+	void PushFlipBytes(T t, std::vector<char>& buffer)
+	{
+		char *b = (char*)&t;
+		for (int i = sizeof(T) - 1; i >= 0; i--)
+			buffer.push_back(b[i]);
+	}
+
+	template <typename T>
+	T ReadFlipBytes(int offset, std::vector<char>& buffer)
+	{
+		T r;
+		char *b = (char*)&r;
+		for (int i = 0; i < sizeof(T); i++)
+			b[sizeof(T) - 1 - i] = buffer[i + offset];
+		return r;
+	}
 }

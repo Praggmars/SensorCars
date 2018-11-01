@@ -5,7 +5,6 @@
 
 namespace diag
 {
-
 	class Diagnostics
 	{
 		HWND m_textBox_IP;
@@ -22,7 +21,11 @@ namespace diag
 
 	private:
 		void SendCarDiagData();
-		void ActReceivedCommand(com::CommandType cmd);
+		void ConnectToServer();
+		void DisconnectFromServer();
+		void ProcessMessage(std::vector<char>& data);
+		void RecvString(std::vector<char>& data);
+		void RecvCommand(std::vector<char>& data);
 
 	public:
 		Diagnostics();
@@ -32,8 +35,8 @@ namespace diag
 		inline void setTarget(car::Car *car) { m_target = car; }
 
 		void CreateGUI(HWND hwnd);
-		void UpdateGUI();
 		void CommandAction(HWND hwnd, UINT btnID);
+		void MessageReceived(std::vector<char> *buffer);
 
 		inline com::Communication* getConnection() { return m_connection.get(); }
 	};

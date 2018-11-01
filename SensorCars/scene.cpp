@@ -78,6 +78,27 @@ namespace car
 		return hitbox;
 	}
 
+	void Scene::ControlUserCarManual(float deltaTime)
+	{
+		float distanceTaken = 0.0f;
+		float speed = 4.0f;
+		float steering = 0.5f;
+		if (m_forward)
+		{
+			m_userCar.MoveForward(-speed * deltaTime);
+			distanceTaken += speed * deltaTime;
+		}
+		if (m_back)
+		{
+			m_userCar.MoveBackward(-speed * deltaTime);
+			distanceTaken -= speed * deltaTime;
+		}
+		if (m_right)
+			m_userCar.TurnRight(distanceTaken*steering);
+		if (m_left)
+			m_userCar.TurnLeft(distanceTaken*steering);
+	}
+
 	bool Scene::Init(HWND owner, RECT position)
 	{
 		m_owner = owner;
@@ -101,6 +122,7 @@ namespace car
 			c.InitSensors(&m_mdlSensor);
 			m_envCars.push_back(CreateHitbox(&m_mfCar, &c));
 		}
+		m_autoControl = false;
 		m_userCar.Init(&m_mdlCar, &m_mfCar, 0.0f, 0.0f, { 0.2f, 0.4f, 1.0f, 1.0f });
 		m_userCar.InitSensors(&m_mdlSensor);
 		m_envCars.push_back(CreateHitbox(&m_mfCar, &m_userCar));
@@ -121,29 +143,16 @@ namespace car
 		m_camera.Update(deltaTime);
 		for (Car& c : m_cars)
 		{
-			c.Control_Auto(deltaTime);
 			c.UpdateDistanceSensors(m_envCars);
 			c.UpdateLightSensors(m_envFloor);
+			c.Control_Auto(deltaTime);
 		}
-		float distanceTaken = 0.0f;
-		float speed = 4.0f;
-		float steering = 0.5f;
-		if (m_forward)
-		{
-			m_userCar.MoveForward(-speed * deltaTime);
-			distanceTaken += speed * deltaTime;
-		}
-		if (m_back)
-		{
-			m_userCar.MoveBackward(-speed * deltaTime);
-			distanceTaken -= speed * deltaTime;
-		}
-		if (m_right)
-			m_userCar.TurnRight(distanceTaken*steering);
-		if (m_left)
-			m_userCar.TurnLeft(distanceTaken*steering);
 		m_userCar.UpdateDistanceSensors(m_envCars);
 		m_userCar.UpdateLightSensors(m_envFloor);
+		if (m_autoControl)
+			m_userCar.Control_Auto(deltaTime);
+		else
+			ControlUserCarManual(deltaTime);
 	}
 
 	void Scene::Render()
@@ -181,10 +190,24 @@ namespace car
 			c.rotation = 0.0f;
 			pos.z += 3.0f;
 		}
-		m_userCar.position = { -3.0f, 0.0f, -2.0f };
+		m_userCar.position = { -3.0f, 0.0f, 0.0f };
 		m_userCar.rotation = { 0.0f, -mth::pi / 2.0f, 0.0f };
 	}
 
+	void Scene::setCarSpeed(int s)
+	{
+		m_forward = s > 0;
+		m_back = s < 0;
+	}
+	void Scene::setCarSteering(int s)
+	{
+		m_right = s > 0;
+		m_left = s < 0;
+	}
+	void Scene::SwitchCarPilotAutoManual()
+	{
+		m_autoControl = !m_autoControl;
+	}
 	void Scene::Frame(float deltaTime)
 	{
 		Update(deltaTime);
@@ -220,6 +243,9 @@ namespace car
 				break;
 			case 'R':
 				Restart();
+				break;
+			case 'C':
+				m_autoControl = !m_autoControl;
 				break;
 			case VK_ESCAPE:
 				PostQuitMessage(0);

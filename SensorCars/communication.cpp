@@ -1,5 +1,7 @@
 #include "communication.h"
 
+extern HWND g_appWindow;
+
 namespace com
 {
 	void Communication::ParseIP_Port(LPCWSTR ip, LPCWSTR port)
@@ -23,43 +25,43 @@ namespace com
 	{
 		while (m_isConnectionOpen)
 		{
+			std::vector<char> *recvBuffer = new std::vector<char>;
 			int msgLen;
-			int tmp = sizeof(msgLen);
-			while (tmp > 0)
-				if (m_isConnectionOpen)
+			if (m_isConnectionOpen = RecvData((char*)&msgLen, sizeof(msgLen)))
+			{
+				msgLen = FlipBytes(msgLen);
+				recvBuffer->resize(msgLen - sizeof(msgLen));
+				if (m_isConnectionOpen = RecvData(recvBuffer->data(), (int)recvBuffer->size()))
 				{
-					char len[4];
-					int result = recv(m_socket, &len[sizeof(msgLen) - tmp], tmp, 0);
-					msgLen = ((len[0] * 0x100 + len[1]) * 0x100 + len[2]) * 0x100 + len[3];
-					if (result > 0)
-						tmp -= result;
-					else
-					{
-						EndConnection();
-						return;
-					}
+					PostMessage(g_appWindow, WM_RECVMSG, (WPARAM)0, (LPARAM)recvBuffer);
 				}
-			m_dataReady = false;
-			m_recvBuffer.resize(msgLen);
-			tmp = msgLen - sizeof(msgLen);
-			while (tmp > 0)
-				if (m_isConnectionOpen)
-				{
-					int result = recv(m_socket, &m_recvBuffer[msgLen - tmp], tmp, 0);
-					if (result > 0)
-						tmp -= result;
-					else
-					{
-						EndConnection();
-						return;
-					}
-				}
-			m_dataReady = true;
+			}
 		}
+		PostMessage(g_appWindow, WM_RECVMSG, (WPARAM)0, (LPARAM)nullptr);
+	}
+	bool Communication::RecvData(char *buffer, int length)
+	{
+		int tmp = length;
+		while (tmp > 0)
+		{
+			if (m_isConnectionOpen)
+			{
+				int result = recv(m_socket, &buffer[length - tmp], tmp, 0);
+				if (!m_isConnectionOpen)
+					return false;
+				if (result > 0)
+					tmp -= result;
+				else
+				{
+					EndConnection();
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 	void Communication::StartConnection()
 	{
-		m_dataReady = false;
 		WSAData wsaData;
 		WORD DllVersion = MAKEWORD(2, 1);
 		if (WSAStartup(DllVersion, &wsaData) != 0)
@@ -71,7 +73,11 @@ namespace com
 		addr.sin_family = AF_INET;
 		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (connect(m_socket, (SOCKADDR*)&addr, addrlen) != 0)
-			throw std::exception("Could not connect");
+		{
+			std::string errorMessage("Could not connect. Error code: ");
+			errorMessage += std::to_string(WSAGetLastError());
+			throw std::exception(errorMessage.c_str());
+		}
 		m_isConnectionOpen = true;
 		std::thread th([this]() {WaitForDataRecv(); });
 		th.detach();
@@ -83,8 +89,6 @@ namespace com
 			shutdown(m_socket, SD_SEND);
 			closesocket(m_socket);
 			WSACleanup();
-			m_recvBuffer.clear();
-			m_dataReady = false;
 			m_isConnectionOpen = false;
 		}
 	}
@@ -95,26 +99,11 @@ namespace com
 			std::vector<char> data;
 			int size = 12 + 2 * (int)msg.length();
 			data.reserve(size);
-			char* b = (char*)&size;
-			for (int i = sizeof(size) - 1; i >= 0; i--)
-				data.push_back(b[i]);
-
-			int msgType = (int)MessageType::STRING;
-			b = (char*)&msgType;
-			for (int i = sizeof(msgType) - 1; i >= 0; i--)
-				data.push_back(b[i]);
-
-			size -= 12;
-			b = (char*)&size;
-			for (int i = sizeof(size) - 1; i >= 0; i--)
-				data.push_back(b[i]);
-
+			PushFlipBytes(size, data);
+			PushFlipBytes(MessageType::STRING, data);
+			PushFlipBytes((int)msg.length() * 2, data);
 			for (int i = 0; i < (int)msg.length(); i++)
-			{
-				char* b = (char*)&msg[i];
-				data.push_back(b[1]);
-				data.push_back(b[0]);
-			}
+				PushFlipBytes(msg[i], data);
 
 			int tmp = (int)data.size();
 			while (tmp > 0)
@@ -124,16 +113,6 @@ namespace com
 	}
 	bool Communication::Send(CarDiagnosticData data)
 	{
-		return false;
-	}
-	bool Communication::FetchRecvData(std::vector<char>& data)
-	{
-		if (m_dataReady)
-		{
-			data = m_recvBuffer;
-			m_dataReady = false;
-			return true;
-		}
 		return false;
 	}
 }
