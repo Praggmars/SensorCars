@@ -120,16 +120,8 @@ namespace com
 			data.reserve(size);
 			PushFlipBytes(size, data);
 			PushFlipBytes(MessageType::CARDIAG, data);
-			PushFlipBytes(diagData.distanceSensorSignal[0], data);
-			PushFlipBytes(diagData.distanceSensorSignal[1], data);
-			PushFlipBytes(diagData.lightSensorSignal[0] * 0.2f, data);
-			PushFlipBytes(diagData.lightSensorSignal[1] * 0.2f, data);
-			PushFlipBytes(diagData.lightSensorSignal[2] * 0.2f, data);
-			PushFlipBytes(diagData.lightSensorSignal[3] * 0.2f, data);
-			PushFlipBytes(diagData.lightSensorSignal[4] * 0.2f, data);
-			PushFlipBytes(diagData.lightSensorSignal[5] * 0.2f, data);
-			PushFlipBytes(diagData.position[0], data);
-			PushFlipBytes(diagData.position[1], data);
+
+			PushNoFlipBytes(diagData, data);
 
 			int tmp = (int)data.size();
 			while (tmp > 0 && m_isConnectionOpen)

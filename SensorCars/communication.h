@@ -81,6 +81,14 @@ namespace com
 	}
 
 	template <typename T>
+	void PushNoFlipBytes(T t, std::vector<char>& buffer)
+	{
+		char *b = (char*)&t;
+		for (int i = 0; i < sizeof(T); i++)
+			buffer.push_back(b[i]);
+	}
+
+	template <typename T>
 	T ReadFlipBytes(int offset, std::vector<char>& buffer)
 	{
 		T r;

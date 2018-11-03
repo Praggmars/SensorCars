@@ -100,8 +100,6 @@ namespace diag
 		diagData.position[1] = m_scene->getUserCar().position.z;
 
 		m_connection->Send(diagData);
-		m_connection->Send(std::to_wstring(diagData.distanceSensorSignal[0] < diagData.distanceSensorSignal[1] ?
-			diagData.distanceSensorSignal[0] : diagData.distanceSensorSignal[1]));
 	}
 	Diagnostics::Diagnostics() :
 		m_textBox_IP(nullptr),
