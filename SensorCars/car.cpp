@@ -22,8 +22,8 @@ namespace car
 		pos = { -0.25f, 0.35f, -0.7f };
 		for (auto& s : m_distanceSensors)
 		{
-			s.Init(sensorModel, nullptr, pos, { 0.0f, mth::pi, 0.0f }, this, 
-				[](float dist, float shade)->float {return dist * 0.001f; });
+			s.Init(sensorModel, nullptr, pos, { 0.0f, mth::pi, 0.0f }, this,
+				[](float dist, float shade)->float {return dist; });
 			pos.x += 0.5f;
 		}
 	}
@@ -47,8 +47,8 @@ namespace car
 	}
 	void Car::Control_Auto(float deltaTime)
 	{
-		if (m_distanceSensors[0].getMeasurement() < 0.002f ||
-			m_distanceSensors[1].getMeasurement() < 0.002f)
+		if (m_distanceSensors[0].getMeasurement() < 1.5f ||
+			m_distanceSensors[1].getMeasurement() < 1.5f)
 			return;
 		float distanceTaken = 0.0f;
 		MoveForward(-m_speed * deltaTime);

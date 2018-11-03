@@ -122,6 +122,7 @@ namespace car
 			c.InitSensors(&m_mdlSensor);
 			m_envCars.push_back(CreateHitbox(&m_mfCar, &c));
 		}
+		m_envCars.push_back(CreateHitbox(&m_mfPlain, &m_plain));
 		m_autoControl = false;
 		m_userCar.Init(&m_mdlCar, &m_mfCar, 0.0f, 0.0f, { 0.2f, 0.4f, 1.0f, 1.0f });
 		m_userCar.InitSensors(&m_mdlSensor);

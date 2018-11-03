@@ -106,7 +106,7 @@ namespace com
 				PushFlipBytes(msg[i], data);
 
 			int tmp = (int)data.size();
-			while (tmp > 0)
+			while (tmp > 0 && m_isConnectionOpen)
 				tmp -= send(m_socket, &data[data.size() - tmp], tmp, 0);
 		}
 		return m_isConnectionOpen;
@@ -122,17 +122,17 @@ namespace com
 			PushFlipBytes(MessageType::CARDIAG, data);
 			PushFlipBytes(diagData.distanceSensorSignal[0], data);
 			PushFlipBytes(diagData.distanceSensorSignal[1], data);
-			PushFlipBytes(diagData.lightSensorSignal[0], data);
-			PushFlipBytes(diagData.lightSensorSignal[1], data);
-			PushFlipBytes(diagData.lightSensorSignal[2], data);
-			PushFlipBytes(diagData.lightSensorSignal[3], data);
-			PushFlipBytes(diagData.lightSensorSignal[4], data);
-			PushFlipBytes(diagData.lightSensorSignal[5], data);
+			PushFlipBytes(diagData.lightSensorSignal[0] * 0.2f, data);
+			PushFlipBytes(diagData.lightSensorSignal[1] * 0.2f, data);
+			PushFlipBytes(diagData.lightSensorSignal[2] * 0.2f, data);
+			PushFlipBytes(diagData.lightSensorSignal[3] * 0.2f, data);
+			PushFlipBytes(diagData.lightSensorSignal[4] * 0.2f, data);
+			PushFlipBytes(diagData.lightSensorSignal[5] * 0.2f, data);
 			PushFlipBytes(diagData.position[0], data);
 			PushFlipBytes(diagData.position[1], data);
 
 			int tmp = (int)data.size();
-			while (tmp > 0)
+			while (tmp > 0 && m_isConnectionOpen)
 				tmp -= send(m_socket, &data[data.size() - tmp], tmp, 0);
 		}
 		return m_isConnectionOpen;
