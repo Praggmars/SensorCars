@@ -24,7 +24,7 @@ namespace car
 		std::vector<Hitbox> m_envFloor;
 
 		Car m_userCar;
-		std::array<Car, 0> m_cars;
+		std::array<Car, 4> m_cars;
 		gfx::Entity m_path;
 		gfx::Entity m_plain;
 

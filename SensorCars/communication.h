@@ -28,14 +28,15 @@ namespace com
 		RIGHT,
 		NOSTEERING,
 		RESET,
-		AUTOMODE
+		AUTOMODE,
+		STARTDIAGNOSTICS,
+		ENDDIAGNOSTICS
 	};
 	struct CarDiagnosticData
 	{
-		int carID;
 		float distanceSensorSignal[2];
 		float lightSensorSignal[6];
-		int collidedWith;
+		float position[2];
 	};
 
 	class Communication

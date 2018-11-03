@@ -111,8 +111,30 @@ namespace com
 		}
 		return m_isConnectionOpen;
 	}
-	bool Communication::Send(CarDiagnosticData data)
+	bool Communication::Send(CarDiagnosticData diagData)
 	{
-		return false;
+		if (m_isConnectionOpen)
+		{
+			std::vector<char> data;
+			int size = 8 + sizeof(com::CarDiagnosticData);
+			data.reserve(size);
+			PushFlipBytes(size, data);
+			PushFlipBytes(MessageType::CARDIAG, data);
+			PushFlipBytes(diagData.distanceSensorSignal[0], data);
+			PushFlipBytes(diagData.distanceSensorSignal[1], data);
+			PushFlipBytes(diagData.lightSensorSignal[0], data);
+			PushFlipBytes(diagData.lightSensorSignal[1], data);
+			PushFlipBytes(diagData.lightSensorSignal[2], data);
+			PushFlipBytes(diagData.lightSensorSignal[3], data);
+			PushFlipBytes(diagData.lightSensorSignal[4], data);
+			PushFlipBytes(diagData.lightSensorSignal[5], data);
+			PushFlipBytes(diagData.position[0], data);
+			PushFlipBytes(diagData.position[1], data);
+
+			int tmp = (int)data.size();
+			while (tmp > 0)
+				tmp -= send(m_socket, &data[data.size() - tmp], tmp, 0);
+		}
+		return m_isConnectionOpen;
 	}
 }

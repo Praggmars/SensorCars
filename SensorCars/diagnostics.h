@@ -20,12 +20,12 @@ namespace diag
 		std::unique_ptr<com::Communication> m_connection;
 
 	private:
-		void SendCarDiagData();
 		void ConnectToServer();
 		void DisconnectFromServer();
 		void ProcessMessage(std::vector<char>& data);
 		void RecvString(std::vector<char>& data);
 		void RecvCommand(std::vector<char>& data);
+		void RecvDiag(std::vector<char>& data);
 
 	public:
 		Diagnostics();

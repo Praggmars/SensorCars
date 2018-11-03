@@ -5,16 +5,6 @@
 
 namespace diag
 {
-	void Diagnostics::SendCarDiagData()
-	{
-		com::CarDiagnosticData data;
-		data.carID = -1;	//usercar
-		for (int i = 0; i < 6; i++)
-			data.lightSensorSignal[i] = m_target->getLightSensor(i).getMeasurement();
-		for (int i = 0; i < 2; i++)
-			data.distanceSensorSignal[i] = m_target->getDistanceSensor(i).getMeasurement();
-		data.collidedWith = 0;
-	}
 	void Diagnostics::DisconnectFromServer()
 	{
 		EndDiagnostics();
@@ -48,6 +38,9 @@ namespace diag
 			break;
 		case (int)com::MessageType::COMMAND:
 			RecvCommand(data);
+			break;
+		case (int)com::MessageType::CARDIAG:
+			RecvDiag(data);
 			break;
 		}
 	}
@@ -91,6 +84,24 @@ namespace diag
 			m_scene->SwitchCarPilotAutoManual();
 			break;
 		}
+	}
+	void Diagnostics::RecvDiag(std::vector<char>& data)
+	{
+		com::CarDiagnosticData diagData;
+		diagData.distanceSensorSignal[0] = m_scene->getUserCar().getDistanceSensor(0).getMeasurement();
+		diagData.distanceSensorSignal[1] = m_scene->getUserCar().getDistanceSensor(1).getMeasurement();
+		diagData.lightSensorSignal[0] = m_scene->getUserCar().getLightSensor(0).getMeasurement();
+		diagData.lightSensorSignal[1] = m_scene->getUserCar().getLightSensor(1).getMeasurement();
+		diagData.lightSensorSignal[2] = m_scene->getUserCar().getLightSensor(2).getMeasurement();
+		diagData.lightSensorSignal[3] = m_scene->getUserCar().getLightSensor(3).getMeasurement();
+		diagData.lightSensorSignal[4] = m_scene->getUserCar().getLightSensor(4).getMeasurement();
+		diagData.lightSensorSignal[5] = m_scene->getUserCar().getLightSensor(5).getMeasurement();
+		diagData.position[0] = m_scene->getUserCar().position.x;
+		diagData.position[1] = m_scene->getUserCar().position.z;
+
+		m_connection->Send(diagData);
+		m_connection->Send(std::to_wstring(diagData.distanceSensorSignal[0] < diagData.distanceSensorSignal[1] ?
+			diagData.distanceSensorSignal[0] : diagData.distanceSensorSignal[1]));
 	}
 	Diagnostics::Diagnostics() :
 		m_textBox_IP(nullptr),
