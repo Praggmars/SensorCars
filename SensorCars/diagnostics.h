@@ -26,6 +26,7 @@ namespace diag
 		void RecvString(std::vector<char>& data);
 		void RecvCommand(std::vector<char>& data);
 		void RecvDiag(std::vector<char>& data);
+		void SendDiagnosticsData(int diagType);
 
 	public:
 		Diagnostics();

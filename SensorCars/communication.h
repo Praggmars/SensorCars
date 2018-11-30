@@ -37,8 +37,7 @@ namespace com
 		DISTANCE = 1 << 0,
 		LIGHT = 1 << 1,
 		POSITION = 1 << 2,
-		SPEED = 1 << 3,
-		STEERING = 1 << 4
+		MOVEMENT = 1 << 3
 	};
 
 	class Communication

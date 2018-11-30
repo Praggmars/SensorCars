@@ -62,6 +62,8 @@ namespace car
 
 		void setCarSpeed(int s);
 		void setCarSteering(int s);
+		float getCarSpeed();
+		float getCarSteering();
 		void SwitchCarPilotAutoManual();
 	};
 }

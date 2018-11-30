@@ -205,6 +205,26 @@ namespace car
 		m_right = s > 0;
 		m_left = s < 0;
 	}
+	float Scene::getCarSpeed()
+	{
+		float distanceTaken = 0.0f;
+		float speed = 4.0f;
+		if (m_forward)
+			distanceTaken += speed;
+		if (m_back)
+			distanceTaken -= speed;
+		return distanceTaken;
+	}
+	float Scene::getCarSteering()
+	{
+		float distanceTaken = 0.0f;
+		float steering = 0.5f;
+		if (m_right)
+			distanceTaken -= steering;
+		if (m_left)
+			distanceTaken += steering;
+		return distanceTaken;
+	}
 	void Scene::SwitchCarPilotAutoManual()
 	{
 		m_autoControl = !m_autoControl;

@@ -120,10 +120,8 @@ namespace com
 			size += 6;
 		if (diagType & (int)DiagType::POSITION)
 			size += 2;
-		if (diagType & (int)DiagType::SPEED)
-			size += 1;
-		if (diagType & (int)DiagType::STEERING)
-			size += 1;
+		if (diagType & (int)DiagType::MOVEMENT)
+			size += 2;
 		return size;
 	}
 	bool Communication::Send(int diagType, float *diagData)

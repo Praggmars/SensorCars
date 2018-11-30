@@ -61,21 +61,27 @@ namespace diag
 		{
 		case (int)com::CommandType::FORWARD:
 			m_scene->setCarSpeed(1);
+			SendDiagnosticsData((int)com::DiagType::MOVEMENT);
 			break;
 		case (int)com::CommandType::BACKWARD:
 			m_scene->setCarSpeed(-1);
+			SendDiagnosticsData((int)com::DiagType::MOVEMENT);
 			break;
 		case (int)com::CommandType::NOMOVE:
 			m_scene->setCarSpeed(0);
+			SendDiagnosticsData((int)com::DiagType::MOVEMENT);
 			break;
 		case (int)com::CommandType::LEFT:
 			m_scene->setCarSteering(-1);
+			SendDiagnosticsData((int)com::DiagType::MOVEMENT);
 			break;
 		case (int)com::CommandType::RIGHT:
 			m_scene->setCarSteering(1);
+			SendDiagnosticsData((int)com::DiagType::MOVEMENT);
 			break;
 		case (int)com::CommandType::NOSTEERING:
 			m_scene->setCarSteering(0);
+			SendDiagnosticsData((int)com::DiagType::MOVEMENT);
 			break;
 		case (int)com::CommandType::RESET:
 			m_scene->Restart();
@@ -87,7 +93,10 @@ namespace diag
 	}
 	void Diagnostics::RecvDiag(std::vector<char>& data)
 	{
-		int diagType = com::ReadFlipBytes<int>(4, data);
+		SendDiagnosticsData(com::ReadFlipBytes<int>(4, data));
+	}
+	void Diagnostics::SendDiagnosticsData(int diagType)
+	{
 		std::vector<float> diagData;
 		if (diagType & (int)com::DiagType::DISTANCE)
 		{
@@ -108,11 +117,11 @@ namespace diag
 			diagData.push_back(m_scene->getUserCar().position.x);
 			diagData.push_back(m_scene->getUserCar().position.z);
 		}
-		if (diagType & (int)com::DiagType::SPEED)
-			diagData.push_back(m_scene->getUserCar().getSpeed());
-		if (diagType & (int)com::DiagType::STEERING)
-			diagData.push_back(m_scene->getUserCar().getSteering());
-
+		if (diagType & (int)com::DiagType::MOVEMENT)
+		{
+			diagData.push_back(m_scene->getCarSpeed());
+			diagData.push_back(m_scene->getCarSteering());
+		}
 		m_connection->Send(diagType, diagData.data());
 	}
 	Diagnostics::Diagnostics() :
