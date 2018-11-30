@@ -28,9 +28,7 @@ namespace com
 		RIGHT,
 		NOSTEERING,
 		RESET,
-		AUTOMODE,
-		STARTDIAGNOSTICS,
-		ENDDIAGNOSTICS
+		AUTOMODE
 	};
 	enum class DiagType :int
 	{

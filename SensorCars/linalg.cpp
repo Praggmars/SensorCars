@@ -682,7 +682,7 @@ namespace mth
 	{
 		float tmp = mat[0][1]; mat[0][1] = mat[1][0]; mat[1][0] = tmp;
 	}
-	float2x2 float2x2::Trasposed() const
+	float2x2 float2x2::Transposed() const
 	{
 		float2x2 m(this);
 		m.Transpose();
@@ -986,7 +986,7 @@ namespace mth
 		tmp = mat[0][2]; mat[0][2] = mat[2][0]; mat[2][0] = tmp;
 		tmp = mat[1][2]; mat[1][2] = mat[2][1]; mat[2][1] = tmp;
 	}
-	float3x3 float3x3::Trasposed() const
+	float3x3 float3x3::Transposed() const
 	{
 		float3x3 m(this);
 		m.Transpose();

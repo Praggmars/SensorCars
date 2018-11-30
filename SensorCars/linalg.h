@@ -194,7 +194,7 @@ namespace mth
 		void Invert();
 		float2x2 Inverse() const;
 		void Transpose();
-		float2x2 Trasposed() const;
+		float2x2 Transposed() const;
 		float2x2 operator*(const float2x2& m) const;
 		float2x2& operator*=(const float2x2& m);
 		float2x2 operator+(const float2x2& m) const;
@@ -254,7 +254,7 @@ namespace mth
 		void Invert();
 		float3x3 Inverse() const;
 		void Transpose();
-		float3x3 Trasposed() const;
+		float3x3 Transposed() const;
 		float3x3 operator*(const float3x3& m) const;
 		float3x3& operator*=(const float3x3& m);
 		float3x3 operator+(const float3x3& m) const;

@@ -6,11 +6,73 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace UnitTests
 {
-	TEST_CLASS(UnitTest1)
+	TEST_CLASS(LinalgTest)
 	{
 	public:
 
-		TEST_METHOD(Multiply)
+		TEST_METHOD(NormalTest)
+		{
+			float eps = 1e-6;
+			Assert::IsTrue(mth::float2(3.0f, 4.0f).Normalized().isNear(mth::float2(0.6f, 0.8f), eps));
+			Assert::IsTrue(mth::float3(2.0f, 3.0f, 4.0f).Normalized().isNear(mth::float3(2.0f, 3.0f, 4.0f) / sqrtf(29.0f), eps));
+			Assert::IsTrue(mth::float4(1.0f, 2.0f, 3.0f, 4.0f).Normalized().isNear(mth::float4(1.0f, 2.0f, 3.0f, 4.0f) / sqrtf(30.0f), eps));
+		}
+
+		TEST_METHOD(Multiply_VecMat)
+		{
+			Assert::IsTrue(
+				mth::float2(5, 6)*
+				mth::float2x2(
+					1, 2,
+					3, 4).Transposed() ==
+				mth::float2(17, 39));
+
+			Assert::IsTrue(
+				mth::float3(2, 4, 7)*
+				mth::float3x3(
+					1, 2, 3,
+					4, 5, 6,
+					7, 8, 9).Transposed() ==
+				mth::float3(31, 70, 109));
+
+			Assert::IsTrue(
+				mth::float4(2, 4, 2, 1)*
+				mth::float4x4(
+					1, 2, 3, 4,
+					3, 4, 5, 6,
+					5, 6, 7, 8,
+					1, 9, 4, 2).Transposed() ==
+				mth::float4(20, 38, 56, 48));
+		}
+
+		TEST_METHOD(Multiply_MatVec)
+		{
+			Assert::IsTrue(
+				mth::float2x2(
+					1, 2,
+					3, 4)*
+				mth::float2(5, 6) ==
+				mth::float2(17, 39));
+
+			Assert::IsTrue(
+				mth::float3x3(
+					1, 2, 3,
+					4, 5, 6,
+					7, 8, 9)*
+				mth::float3(2, 4, 7) ==
+				mth::float3(31, 70, 109));
+
+			Assert::IsTrue(
+				mth::float4x4(
+					1, 2, 3, 4,
+					3, 4, 5, 6,
+					5, 6, 7, 8,
+					1, 9, 4, 2)*
+				mth::float4(2, 4, 2, 1) ==
+				mth::float4(20, 38, 56, 48));
+		}
+
+		TEST_METHOD(Multiply_mm)
 		{
 			Assert::IsTrue(
 				mth::float2x2(
