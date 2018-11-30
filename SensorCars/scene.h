@@ -45,7 +45,7 @@ namespace car
 		HWND CreateGfxScreen(RECT position);
 		Hitbox CreateHitbox(std::vector<mth::Triangle> *modelFrame, gfx::Entity *entity);
 
-		void ControlUserCarManual(float deltaTime);
+		void ControlUserCarManual();
 
 		void Update(float deltaTime);
 		void Render();

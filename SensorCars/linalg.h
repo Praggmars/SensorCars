@@ -56,6 +56,8 @@ namespace mth
 		float2& operator/=(const float f);
 		float2& operator=(const float f);
 		float2 operator*(const float2x2& m) const;
+		bool operator==(float2 v);
+		bool isNear(float2 v, float eps);
 		float operator()(const int i) const;
 		float& operator()(const int i);
 		operator float3() const;
@@ -105,6 +107,8 @@ namespace mth
 		float3& operator/=(const float f);
 		float3& operator=(const float f);
 		float3 operator*(const float3x3& m) const;
+		bool operator==(float3 v);
+		bool isNear(float3 v, float eps);
 		float operator()(const int i) const;
 		float& operator()(const int i);
 		operator float2() const;
@@ -154,6 +158,8 @@ namespace mth
 		float4& operator/=(const float f);
 		float4& operator=(const float f);
 		float4 operator*(const float4x4& m) const;
+		bool operator==(float4 v);
+		bool isNear(float4 v, float eps);
 		float operator()(const int i) const;
 		float& operator()(const int i);
 		operator float2() const;
@@ -206,6 +212,8 @@ namespace mth
 		float2x2& operator/=(const float f);
 		float2x2& operator=(const float f);
 		float2x2 operator-() const;
+		bool operator==(float2x2 m);
+		bool isNear(float2x2 m, float eps);
 	};
 
 	class float3x3
@@ -264,6 +272,8 @@ namespace mth
 		float3x3& operator/=(const float f);
 		float3x3& operator=(const float f);
 		float3x3 operator-() const;
+		bool operator==(float3x3 m);
+		bool isNear(float3x3 m, float eps);
 	};
 
 	class float4x4
@@ -328,6 +338,8 @@ namespace mth
 		float4x4& operator/=(const float f);
 		float4x4& operator=(const float f);
 		float4x4 operator-() const;
+		bool operator==(float4x4 m);
+		bool isNear(float4x4 m, float eps);
 	};
 
 

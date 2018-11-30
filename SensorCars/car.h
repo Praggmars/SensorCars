@@ -10,17 +10,19 @@ namespace car
 		std::array<Sensor, 6> m_lightSensors;
 		std::array<Sensor, 2> m_distanceSensors;
 
-		float m_speed;
-		float m_steering;
+		float m_maxSpeed;
+		float m_maxSteering;
+		float m_currentSpeed;
+		float m_currentSteering;
 		
 	public:
 		void Init(gfx::Model *model, std::vector<mth::Triangle> *modelFrame, mth::float3 position, mth::float3 rotation, mth::float4 color = { 1.0f, 0.4f, 0.2f, 1.0f });
 		void InitSensors(gfx::Model *sensorModel);
 		inline std::vector<mth::Triangle>& getHitbox() { return *m_modelFrame; }
-		inline float getSpeed() { return m_speed; }
-		inline void setSpeed(float speed) { m_speed = speed; }
-		inline float getSteering() { return m_steering; }
-		inline void setSteering(float steering) { m_steering = steering; }
+		inline float getSpeed() { return m_currentSpeed; }
+		inline void setSpeed(float speed) { m_currentSpeed = speed; }
+		inline float getSteering() { return m_currentSteering; }
+		inline void setSteering(float steering) { m_currentSteering = steering; }
 
 		inline Sensor& getLightSensor(UINT index) { return m_lightSensors[index]; }
 		inline int getLightSensorCount() { return (int)m_lightSensors.size(); }
@@ -31,6 +33,7 @@ namespace car
 
 		void UpdateLightSensors(std::vector<Hitbox>& enviroment);
 		void UpdateDistanceSensors(std::vector<Hitbox>& enviroment);
-		void Control_Auto(float deltaTime);
+		void Control_Auto();
+		void Update(float deltaTime);
 	};
 }

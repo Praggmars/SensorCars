@@ -78,25 +78,20 @@ namespace car
 		return hitbox;
 	}
 
-	void Scene::ControlUserCarManual(float deltaTime)
+	void Scene::ControlUserCarManual()
 	{
-		float distanceTaken = 0.0f;
-		float speed = 4.0f;
-		float steering = 0.5f;
+		float speed = 0.0f;
+		float steering = 0.0f;
 		if (m_forward)
-		{
-			m_userCar.MoveForward(-speed * deltaTime);
-			distanceTaken += speed * deltaTime;
-		}
+			speed += 4.0f;
 		if (m_back)
-		{
-			m_userCar.MoveBackward(-speed * deltaTime);
-			distanceTaken -= speed * deltaTime;
-		}
+			speed -= 4.0f;
+		m_userCar.setSpeed(speed);
 		if (m_right)
-			m_userCar.TurnRight(distanceTaken*steering);
+			steering -= 0.5f;
 		if (m_left)
-			m_userCar.TurnLeft(distanceTaken*steering);
+			steering += 0.5f;
+		m_userCar.setSteering(steering);
 	}
 
 	bool Scene::Init(HWND owner, RECT position)
@@ -146,14 +141,16 @@ namespace car
 		{
 			c.UpdateDistanceSensors(m_envCars);
 			c.UpdateLightSensors(m_envFloor);
-			c.Control_Auto(deltaTime);
+			c.Control_Auto();
+			c.Update(deltaTime);
 		}
 		m_userCar.UpdateDistanceSensors(m_envCars);
 		m_userCar.UpdateLightSensors(m_envFloor);
 		if (m_autoControl)
-			m_userCar.Control_Auto(deltaTime);
+			m_userCar.Control_Auto();
 		else
-			ControlUserCarManual(deltaTime);
+			ControlUserCarManual();
+		m_userCar.Update(deltaTime);
 	}
 
 	void Scene::Render()
@@ -207,23 +204,11 @@ namespace car
 	}
 	float Scene::getCarSpeed()
 	{
-		float distanceTaken = 0.0f;
-		float speed = 4.0f;
-		if (m_forward)
-			distanceTaken += speed;
-		if (m_back)
-			distanceTaken -= speed;
-		return distanceTaken;
+		return m_userCar.getSpeed();
 	}
 	float Scene::getCarSteering()
 	{
-		float distanceTaken = 0.0f;
-		float steering = 0.5f;
-		if (m_right)
-			distanceTaken -= steering;
-		if (m_left)
-			distanceTaken += steering;
-		return distanceTaken;
+		return m_userCar.getSteering();
 	}
 	void Scene::SwitchCarPilotAutoManual()
 	{

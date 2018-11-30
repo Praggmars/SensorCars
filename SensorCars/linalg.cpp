@@ -151,6 +151,14 @@ namespace mth
 	{
 		return float2(x * m(0, 0) + y * m(1, 0), x * m(0, 1) + y * m(1, 1));
 	}
+	bool float2::operator==(float2 v)
+	{
+		return memcmp(this, &v, sizeof(float2)) == 0;
+	}
+	bool float2::isNear(float2 v, float eps)
+	{
+		return fabsf(x - v.x) < eps && fabsf(y - v.y) < eps;
+	}
 	float float2::operator()(const int i) const
 	{
 		return ((float*)((void*)this))[i];
@@ -338,6 +346,14 @@ namespace mth
 			x * m(0, 0) + y * m(1, 0) + z * m(2, 0),
 			x * m(0, 1) + y * m(1, 1) + z * m(2, 1),
 			x * m(0, 2) + y * m(1, 2) + z * m(2, 2));
+	}
+	bool float3::operator==(float3 v)
+	{
+		return memcmp(this, &v, sizeof(float3)) == 0;
+	}
+	bool float3::isNear(float3 v, float eps)
+	{
+		return fabsf(x - v.x) < eps && fabsf(y - v.y) < eps && fabsf(z - v.z) < eps;
 	}
 	float float3::operator()(const int i) const
 	{
@@ -533,6 +549,14 @@ namespace mth
 			x * m(0, 1) + y * m(1, 1) + z * m(2, 1) + w * m(3, 1),
 			x * m(0, 2) + y * m(1, 2) + z * m(2, 2) + w * m(3, 2),
 			x * m(0, 3) + y * m(1, 3) + z * m(2, 3) + w * m(3, 3));
+	}
+	bool float4::operator==(float4 v)
+	{
+		return memcmp(this, &v, sizeof(float4)) == 0;
+	}
+	bool float4::isNear(float4 v, float eps)
+	{
+		return fabsf(x - v.x) < eps && fabsf(y - v.y) < eps && fabsf(z - v.z) < eps && fabsf(w - v.w) < eps;
 	}
 	float float4::operator()(const int i) const
 	{
@@ -737,6 +761,19 @@ namespace mth
 	float2x2 float2x2::operator-() const
 	{
 		return float2x2(-mat[0][0], -mat[0][1], -mat[1][0], -mat[1][1]);
+	}
+
+	bool float2x2::operator==(float2x2 m)
+	{
+		return memcmp(this, &m, sizeof(float2x2)) == 0;
+	}
+
+	bool float2x2::isNear(float2x2 m, float eps)
+	{
+		return fabsf(mat[0][0] - m.mat[0][0]) < eps &&
+			fabsf(mat[0][1] - m.mat[0][1]) < eps &&
+			fabsf(mat[1][0] - m.mat[1][0]) < eps &&
+			fabsf(mat[1][1] - m.mat[1][1]) < eps;
 	}
 
 #pragma endregion
@@ -1052,6 +1089,24 @@ namespace mth
 			-mat[0][0], -mat[0][1], -mat[0][2],
 			-mat[1][0], -mat[1][1], -mat[1][2],
 			-mat[2][0], -mat[2][1], -mat[2][2]);
+	}
+
+	bool float3x3::operator==(float3x3 m)
+	{
+		return memcmp(this, &m, sizeof(float3x3)) == 0;
+	}
+
+	bool float3x3::isNear(float3x3 m, float eps)
+	{
+		return fabsf(mat[0][0] - m.mat[0][0]) < eps &&
+			fabsf(mat[0][1] - m.mat[0][1]) < eps &&
+			fabsf(mat[0][2] - m.mat[0][2]) < eps &&
+			fabsf(mat[1][0] - m.mat[1][0]) < eps &&
+			fabsf(mat[1][1] - m.mat[1][1]) < eps &&
+			fabsf(mat[1][2] - m.mat[1][2]) < eps &&
+			fabsf(mat[2][0] - m.mat[2][0]) < eps &&
+			fabsf(mat[2][1] - m.mat[2][1]) < eps &&
+			fabsf(mat[2][2] - m.mat[2][2]) < eps;
 	}
 
 #pragma endregion
@@ -1433,6 +1488,31 @@ namespace mth
 			-mat[1][0], -mat[1][1], -mat[1][2], -mat[1][3],
 			-mat[2][0], -mat[2][1], -mat[2][2], -mat[2][3],
 			-mat[3][0], -mat[3][1], -mat[3][2], -mat[3][3]);
+	}
+
+	bool float4x4::operator==(float4x4 m)
+	{
+		return memcmp(this, &m, sizeof(float4x4)) == 0;
+	}
+
+	bool float4x4::isNear(float4x4 m, float eps)
+	{
+		return fabsf(mat[0][0] - m.mat[0][0]) < eps &&
+			fabsf(mat[0][1] - m.mat[0][1]) < eps &&
+			fabsf(mat[0][2] - m.mat[0][2]) < eps &&
+			fabsf(mat[0][3] - m.mat[0][3]) < eps &&
+			fabsf(mat[1][0] - m.mat[1][0]) < eps &&
+			fabsf(mat[1][1] - m.mat[1][1]) < eps &&
+			fabsf(mat[1][2] - m.mat[1][2]) < eps &&
+			fabsf(mat[1][3] - m.mat[1][3]) < eps &&
+			fabsf(mat[2][0] - m.mat[2][0]) < eps &&
+			fabsf(mat[2][1] - m.mat[2][1]) < eps &&
+			fabsf(mat[2][2] - m.mat[2][2]) < eps &&
+			fabsf(mat[2][3] - m.mat[2][3]) < eps &&		
+			fabsf(mat[3][0] - m.mat[3][0]) < eps &&
+			fabsf(mat[3][1] - m.mat[3][1]) < eps &&
+			fabsf(mat[3][2] - m.mat[3][2]) < eps &&
+			fabsf(mat[3][3] - m.mat[3][3]) < eps;
 	}
 
 #pragma endregion
