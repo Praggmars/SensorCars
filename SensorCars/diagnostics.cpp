@@ -87,19 +87,33 @@ namespace diag
 	}
 	void Diagnostics::RecvDiag(std::vector<char>& data)
 	{
-		com::CarDiagnosticData diagData;
-		diagData.distanceSensorSignal[0] = m_scene->getUserCar().getDistanceSensor(0).getMeasurement();
-		diagData.distanceSensorSignal[1] = m_scene->getUserCar().getDistanceSensor(1).getMeasurement();
-		diagData.lightSensorSignal[0] = m_scene->getUserCar().getLightSensor(0).getMeasurement();
-		diagData.lightSensorSignal[1] = m_scene->getUserCar().getLightSensor(1).getMeasurement();
-		diagData.lightSensorSignal[2] = m_scene->getUserCar().getLightSensor(2).getMeasurement();
-		diagData.lightSensorSignal[3] = m_scene->getUserCar().getLightSensor(3).getMeasurement();
-		diagData.lightSensorSignal[4] = m_scene->getUserCar().getLightSensor(4).getMeasurement();
-		diagData.lightSensorSignal[5] = m_scene->getUserCar().getLightSensor(5).getMeasurement();
-		diagData.position[0] = m_scene->getUserCar().position.x;
-		diagData.position[1] = m_scene->getUserCar().position.z;
+		int diagType = com::ReadFlipBytes<int>(4, data);
+		std::vector<float> diagData;
+		if (diagType & (int)com::DiagType::DISTANCE)
+		{
+			diagData.push_back(m_scene->getUserCar().getDistanceSensor(0).getMeasurement());
+			diagData.push_back(m_scene->getUserCar().getDistanceSensor(1).getMeasurement());
+		}
+		if (diagType & (int)com::DiagType::LIGHT)
+		{
+			diagData.push_back(m_scene->getUserCar().getLightSensor(0).getMeasurement());
+			diagData.push_back(m_scene->getUserCar().getLightSensor(1).getMeasurement());
+			diagData.push_back(m_scene->getUserCar().getLightSensor(2).getMeasurement());
+			diagData.push_back(m_scene->getUserCar().getLightSensor(3).getMeasurement());
+			diagData.push_back(m_scene->getUserCar().getLightSensor(4).getMeasurement());
+			diagData.push_back(m_scene->getUserCar().getLightSensor(5).getMeasurement());
+		}
+		if (diagType & (int)com::DiagType::POSITION)
+		{
+			diagData.push_back(m_scene->getUserCar().position.x);
+			diagData.push_back(m_scene->getUserCar().position.z);
+		}
+		if (diagType & (int)com::DiagType::SPEED)
+			diagData.push_back(m_scene->getUserCar().getSpeed());
+		if (diagType & (int)com::DiagType::STEERING)
+			diagData.push_back(m_scene->getUserCar().getSteering());
 
-		m_connection->Send(diagData);
+		m_connection->Send(diagType, diagData.data());
 	}
 	Diagnostics::Diagnostics() :
 		m_textBox_IP(nullptr),

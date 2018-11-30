@@ -111,17 +111,35 @@ namespace com
 		}
 		return m_isConnectionOpen;
 	}
-	bool Communication::Send(CarDiagnosticData diagData)
+	int DiagDataSize(int diagType)
+	{
+		int size = 0;
+		if (diagType & (int)DiagType::DISTANCE)
+			size += 2;
+		if (diagType & (int)DiagType::LIGHT)
+			size += 6;
+		if (diagType & (int)DiagType::POSITION)
+			size += 2;
+		if (diagType & (int)DiagType::SPEED)
+			size += 1;
+		if (diagType & (int)DiagType::STEERING)
+			size += 1;
+		return size;
+	}
+	bool Communication::Send(int diagType, float *diagData)
 	{
 		if (m_isConnectionOpen)
 		{
 			std::vector<char> data;
-			int size = 8 + sizeof(com::CarDiagnosticData);
+			int diagDataSize = DiagDataSize(diagType);
+			int size = 12 + sizeof(float) * diagDataSize;
 			data.reserve(size);
 			PushFlipBytes(size, data);
 			PushFlipBytes(MessageType::CARDIAG, data);
+			PushFlipBytes(diagType, data);
 
-			PushNoFlipBytes(diagData, data);
+			for (int i = 0; i < diagDataSize; i++)
+				PushNoFlipBytes(diagData[i], data);
 
 			int tmp = (int)data.size();
 			while (tmp > 0 && m_isConnectionOpen)

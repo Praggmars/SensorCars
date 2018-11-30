@@ -32,11 +32,13 @@ namespace com
 		STARTDIAGNOSTICS,
 		ENDDIAGNOSTICS
 	};
-	struct CarDiagnosticData
+	enum class DiagType :int
 	{
-		float distanceSensorSignal[2];
-		float lightSensorSignal[6];
-		float position[2];
+		DISTANCE = 1 << 0,
+		LIGHT = 1 << 1,
+		POSITION = 1 << 2,
+		SPEED = 1 << 3,
+		STEERING = 1 << 4
 	};
 
 	class Communication
@@ -58,7 +60,7 @@ namespace com
 		~Communication();
 		inline bool isOnline() { return m_isConnectionOpen; }
 		bool Send(std::wstring msg);
-		bool Send(CarDiagnosticData data);
+		bool Send(int diagType, float *data);
 	};
 
 	template <typename T>
