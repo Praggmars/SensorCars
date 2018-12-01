@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "car.h"
 #include "communication.h"
+#include "carselftest.h"
 
 namespace car
 {
@@ -30,6 +31,8 @@ namespace car
 
 		gfx::Camera m_camera;
 
+		std::unique_ptr<SelfTest> m_selfTest;
+
 		bool m_forward;
 		bool m_back;
 		bool m_left;
@@ -47,6 +50,10 @@ namespace car
 
 		void ControlUserCarManual();
 
+		std::wstring GenerateFailedTestMessage(UINT errorFlags);
+
+		void SelfTestUpdate(float deltaTime);
+		void SimulationUpdate(float deltaTime);
 		void Update(float deltaTime);
 		void Render();
 
@@ -65,5 +72,6 @@ namespace car
 		float getCarSpeed();
 		float getCarSteering();
 		void SwitchCarPilotAutoManual();
+		void StartSelfTest();
 	};
 }

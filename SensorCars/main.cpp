@@ -4,6 +4,7 @@
 
 #define ID_BTN_RESTART 10
 #define ID_BTN_AUTOMODE 11
+#define ID_BTN_SELFTEST 12
 
 HWND g_appWindow;
 std::unique_ptr<car::Scene> g_scene;
@@ -20,6 +21,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		g_diagnostics.CreateGUI(hwnd);
 		CreateWindow(L"button", L"Restart cars", WS_CHILD | WS_VISIBLE | WS_BORDER, 10, rect.bottom - 300, 90, 40, hwnd, (HMENU)ID_BTN_RESTART, GetModuleHandle(NULL), NULL);
 		CreateWindow(L"button", L"Auto mode", WS_CHILD | WS_VISIBLE | WS_BORDER, 110, rect.bottom - 300, 80, 40, hwnd, (HMENU)ID_BTN_AUTOMODE, GetModuleHandle(NULL), NULL);
+		CreateWindow(L"button", L"Self test", WS_CHILD | WS_VISIBLE | WS_BORDER, 10, rect.bottom - 340, 180, 30, hwnd, (HMENU)ID_BTN_SELFTEST, GetModuleHandle(NULL), NULL);
 		return 0;
 	case WM_RECVMSG:
 		g_diagnostics.MessageReceived((std::vector<char>*)lparam);
@@ -32,6 +34,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			break;
 		case ID_BTN_AUTOMODE:
 			g_scene->SwitchCarPilotAutoManual();
+			break;
+		case ID_BTN_SELFTEST:
+			g_scene->StartSelfTest();
 			break;
 		default:
 			g_diagnostics.CommandAction(hwnd, (UINT)wparam);

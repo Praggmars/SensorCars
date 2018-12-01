@@ -94,6 +94,57 @@ namespace car
 		m_userCar.setSteering(steering);
 	}
 
+	std::wstring Scene::GenerateFailedTestMessage(UINT errorFlags)
+	{
+		std::wstring str;
+		if (errorFlags & (UINT)TestPartFlag::FORWARD_DRIVE)
+			str += L"Cannot go forward\n";
+		if (errorFlags & (UINT)TestPartFlag::BACKWARD_DRIVE)
+			str += L"Cannot go backward\n";
+		if (errorFlags & (UINT)TestPartFlag::RIGHT_STEER)
+			str += L"Cannot steer right\n";
+		if (errorFlags & (UINT)TestPartFlag::LEFT_STEER)
+			str += L"Cannot steer left\n";
+		if (errorFlags & (UINT)TestPartFlag::LIGHT_SENSOR)
+			str += L"Light sensors offline\n";
+		if (errorFlags & (UINT)TestPartFlag::DISTANCE_SENSOR)
+			str += L"Distance sensors offline\n";
+		return str;
+	}
+
+	void Scene::SelfTestUpdate(float deltaTime)
+	{
+		m_selfTest->Update(deltaTime);
+		m_userCar.Update(deltaTime);
+		if (m_selfTest->Finished())
+		{
+			UINT result = m_selfTest->TestResult();
+			if (!result)
+				MessageBox(NULL, L"All is good", L"Test Results", MB_OK | MB_ICONINFORMATION);
+			else
+				MessageBox(NULL, GenerateFailedTestMessage(result).c_str(), L"Test Results", MB_OK | MB_ICONINFORMATION);
+			m_selfTest.reset();
+		}
+	}
+
+	void Scene::SimulationUpdate(float deltaTime)
+	{
+		for (Car& c : m_cars)
+		{
+			c.UpdateDistanceSensors(m_envCars);
+			c.UpdateLightSensors(m_envFloor);
+			c.Control_Auto();
+			c.Update(deltaTime);
+		}
+		m_userCar.UpdateDistanceSensors(m_envCars);
+		m_userCar.UpdateLightSensors(m_envFloor);
+		if (m_autoControl)
+			m_userCar.Control_Auto();
+		else
+			ControlUserCarManual();
+		m_userCar.Update(deltaTime);
+	}
+
 	bool Scene::Init(HWND owner, RECT position)
 	{
 		m_owner = owner;
@@ -136,21 +187,13 @@ namespace car
 
 	void Scene::Update(float deltaTime)
 	{
+		if (deltaTime > 0.04f)
+			deltaTime = 0.04f;
 		m_camera.Update(deltaTime);
-		for (Car& c : m_cars)
-		{
-			c.UpdateDistanceSensors(m_envCars);
-			c.UpdateLightSensors(m_envFloor);
-			c.Control_Auto();
-			c.Update(deltaTime);
-		}
-		m_userCar.UpdateDistanceSensors(m_envCars);
-		m_userCar.UpdateLightSensors(m_envFloor);
-		if (m_autoControl)
-			m_userCar.Control_Auto();
+		if (m_selfTest)
+			SelfTestUpdate(deltaTime);
 		else
-			ControlUserCarManual();
-		m_userCar.Update(deltaTime);
+			SimulationUpdate(deltaTime);
 	}
 
 	void Scene::Render()
@@ -213,6 +256,10 @@ namespace car
 	void Scene::SwitchCarPilotAutoManual()
 	{
 		m_autoControl = !m_autoControl;
+	}
+	void Scene::StartSelfTest()
+	{
+		m_selfTest = std::make_unique<SelfTest>(m_userCar);
 	}
 	void Scene::Frame(float deltaTime)
 	{

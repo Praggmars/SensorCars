@@ -5,7 +5,7 @@ namespace car
 {
 	void Sensor::Init(gfx::Model *model, std::vector<mth::Triangle> *modelFrame, mth::float3 position, mth::float3 rotation, mth::Position *holder)
 	{
-		Init(model, modelFrame, position, rotation, holder, [](float dist, float shade)->float {return shade / dist; });
+		Init(model, modelFrame, position, rotation, holder, [](float dist, float shade)->float {return (shade + 0.01f) / dist; });
 	}
 	void Sensor::Init(gfx::Model *model, std::vector<mth::Triangle> *modelFrame, mth::float3 position, mth::float3 rotation, mth::Position *holder, std::function<float(float dist, float shade)> equation)
 	{

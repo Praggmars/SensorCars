@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "CppUnitTest.h"
 #include "../SensorCars/linalg.h"
 
@@ -10,9 +9,13 @@ namespace UnitTests
 	{
 	public:
 
+		TEST_METHOD(SuccessfulTest)
+		{
+			Assert::IsTrue(true);
+		}
 		TEST_METHOD(NormalTest)
 		{
-			float eps = 1e-6;
+			float eps = 1e-6f;
 			Assert::IsTrue(mth::float2(3.0f, 4.0f).Normalized().isNear(mth::float2(0.6f, 0.8f), eps));
 			Assert::IsTrue(mth::float3(2.0f, 3.0f, 4.0f).Normalized().isNear(mth::float3(2.0f, 3.0f, 4.0f) / sqrtf(29.0f), eps));
 			Assert::IsTrue(mth::float4(1.0f, 2.0f, 3.0f, 4.0f).Normalized().isNear(mth::float4(1.0f, 2.0f, 3.0f, 4.0f) / sqrtf(30.0f), eps));
@@ -143,7 +146,7 @@ namespace UnitTests
 
 		TEST_METHOD(Inverse)
 		{
-			float eps = 1e-6;
+			float eps = 1e-6f;
 
 			mth::float2x2 m22(
 				1.0f, 2.0f,
