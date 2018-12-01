@@ -89,6 +89,9 @@ namespace diag
 		case (int)com::CommandType::AUTOMODE:
 			m_scene->SwitchCarPilotAutoManual();
 			break;
+		case (int)com::CommandType::SELFTEST:
+			m_scene->StartSelfTest(true);
+			break;
 		}
 	}
 	void Diagnostics::RecvDiag(std::vector<char>& data)

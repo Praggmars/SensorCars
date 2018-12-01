@@ -9,16 +9,47 @@ namespace UnitTests
 	{
 	public:
 
-		TEST_METHOD(SuccessfulTest)
-		{
-			Assert::IsTrue(true);
-		}
 		TEST_METHOD(NormalTest)
 		{
 			float eps = 1e-6f;
 			Assert::IsTrue(mth::float2(3.0f, 4.0f).Normalized().isNear(mth::float2(0.6f, 0.8f), eps));
-			Assert::IsTrue(mth::float3(2.0f, 3.0f, 4.0f).Normalized().isNear(mth::float3(2.0f, 3.0f, 4.0f) / sqrtf(29.0f), eps));
-			Assert::IsTrue(mth::float4(1.0f, 2.0f, 3.0f, 4.0f).Normalized().isNear(mth::float4(1.0f, 2.0f, 3.0f, 4.0f) / sqrtf(30.0f), eps));
+			Assert::IsTrue(mth::float3(2.0f, 3.0f, 4.0f).Normalized().isNear(mth::float3(
+				0.37139067635f, 0.55708601453f, 0.7427813527f), eps));
+			Assert::IsTrue(mth::float4(1.0f, 2.0f, 3.0f, 4.0f).Normalized().isNear(mth::float4(
+				0.18257418583f, 0.36514837167f, 0.5477225575f, 0.73029674334f), eps));
+		}
+
+		TEST_METHOD(Transposed)
+		{
+			Assert::IsTrue(
+				mth::float2x2(
+					1, 2,
+					3, 4).Transposed() ==
+				mth::float2x2(
+					1, 3,
+					2, 4));
+
+			Assert::IsTrue(
+				mth::float3x3(
+					1, 2, 3,
+					4, 5, 6,
+					7, 8, 9).Transposed() ==
+				mth::float3x3(
+					1, 4, 7,
+					2, 5, 8,
+					3, 6, 9));
+
+			Assert::IsTrue(
+				mth::float4x4(
+					1, 2, 3, 4,
+					3, 4, 5, 6,
+					5, 6, 7, 8,
+					1, 9, 4, 2).Transposed() ==
+				mth::float4x4(
+					1, 3, 5, 1,
+					2, 4, 6, 9,
+					3, 5, 7, 4,
+					4, 6, 8, 2));
 		}
 
 		TEST_METHOD(Multiply_VecMat)
@@ -26,25 +57,25 @@ namespace UnitTests
 			Assert::IsTrue(
 				mth::float2(5, 6)*
 				mth::float2x2(
-					1, 2,
-					3, 4).Transposed() ==
+					1, 3,
+					2, 4) ==
 				mth::float2(17, 39));
 
 			Assert::IsTrue(
 				mth::float3(2, 4, 7)*
 				mth::float3x3(
-					1, 2, 3,
-					4, 5, 6,
-					7, 8, 9).Transposed() ==
+					1, 4, 7,
+					2, 5, 8,
+					3, 6, 9) ==
 				mth::float3(31, 70, 109));
 
 			Assert::IsTrue(
 				mth::float4(2, 4, 2, 1)*
 				mth::float4x4(
-					1, 2, 3, 4,
-					3, 4, 5, 6,
-					5, 6, 7, 8,
-					1, 9, 4, 2).Transposed() ==
+					1, 3, 5, 1,
+					2, 4, 6, 9,
+					3, 5, 7, 4,
+					4, 6, 8, 2) ==
 				mth::float4(20, 38, 56, 48));
 		}
 

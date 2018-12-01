@@ -36,7 +36,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			g_scene->SwitchCarPilotAutoManual();
 			break;
 		case ID_BTN_SELFTEST:
-			g_scene->StartSelfTest();
+			g_scene->StartSelfTest(false);
 			break;
 		default:
 			g_diagnostics.CommandAction(hwnd, (UINT)wparam);
@@ -49,7 +49,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			g_scene.reset();
 			g_scene = std::unique_ptr<car::Scene>(new car::Scene);
-			if (!g_scene->Init(hwnd, rect))
+			if (!g_scene->Init(hwnd, rect, &g_diagnostics))
 				PostQuitMessage(0);
 		}
 		if (g_scene)
@@ -119,6 +119,6 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 			prevTime = currentTime;
 		}
 	}
-	g_scene.release();
+	g_scene.reset();
 	return (INT)msg.wParam;
 }

@@ -15,20 +15,21 @@ namespace com
 {
 	enum class MessageType :int
 	{
-		STRING,
-		COMMAND,
-		CARDIAG
+		STRING = 1,
+		COMMAND = 2,
+		CARDIAG = 3
 	};
 	enum class CommandType :int
 	{
-		FORWARD,
-		BACKWARD,
-		NOMOVE,
-		LEFT,
-		RIGHT,
-		NOSTEERING,
-		RESET,
-		AUTOMODE
+		FORWARD = 1,
+		BACKWARD = 2,
+		NOMOVE = 3,
+		LEFT = 4,
+		RIGHT = 5,
+		NOSTEERING = 6,
+		RESET = 7,
+		AUTOMODE = 8,
+		SELFTEST = 9
 	};
 	enum class DiagType :int
 	{

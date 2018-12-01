@@ -5,6 +5,11 @@
 #include "communication.h"
 #include "carselftest.h"
 
+namespace diag
+{
+	class Diagnostics;
+}
+
 namespace car
 {
 	class Scene
@@ -32,12 +37,14 @@ namespace car
 		gfx::Camera m_camera;
 
 		std::unique_ptr<SelfTest> m_selfTest;
+		diag::Diagnostics  *m_diagnostics;
 
 		bool m_forward;
 		bool m_back;
 		bool m_left;
 		bool m_right;
 		bool m_autoControl;
+		bool m_selfTestFromServer;
 
 	private:
 		bool LoadEntity(ID3D11Device *device, LPCWSTR filename, gfx::Model *model, std::vector<mth::Triangle> *m_modelFrame);
@@ -58,7 +65,7 @@ namespace car
 		void Render();
 
 	public:
-		bool Init(HWND owner, RECT position);
+		bool Init(HWND owner, RECT position, diag::Diagnostics  *diagnostics);
 
 		void Frame(float deltaTime);
 		void MessageHandler(MSG& msg);
@@ -72,6 +79,6 @@ namespace car
 		float getCarSpeed();
 		float getCarSteering();
 		void SwitchCarPilotAutoManual();
-		void StartSelfTest();
+		void StartSelfTest(bool fromServer);
 	};
 }

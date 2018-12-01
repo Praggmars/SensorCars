@@ -1,4 +1,4 @@
-#include "scene.h"
+#include "diagnostics.h"
 #include <string>
 #include <fstream>
 
@@ -119,10 +119,16 @@ namespace car
 		if (m_selfTest->Finished())
 		{
 			UINT result = m_selfTest->TestResult();
-			if (!result)
-				MessageBox(NULL, L"All is good", L"Test Results", MB_OK | MB_ICONINFORMATION);
+			std::wstring str = result ? GenerateFailedTestMessage(result) : L"All is good";
+			if (m_selfTestFromServer)
+			{
+				if (m_diagnostics->getConnection())
+					m_diagnostics->getConnection()->Send(L"Test finished:\n" + str);
+			}
 			else
-				MessageBox(NULL, GenerateFailedTestMessage(result).c_str(), L"Test Results", MB_OK | MB_ICONINFORMATION);
+			{
+				MessageBox(NULL, str.c_str(), L"Test Results", MB_OK | (result ? MB_ICONERROR : MB_ICONINFORMATION));
+			}
 			m_selfTest.reset();
 		}
 	}
@@ -145,9 +151,10 @@ namespace car
 		m_userCar.Update(deltaTime);
 	}
 
-	bool Scene::Init(HWND owner, RECT position)
+	bool Scene::Init(HWND owner, RECT position, diag::Diagnostics *diagnostics)
 	{
 		m_owner = owner;
+		m_diagnostics = diagnostics;
 		int width = position.right - position.left;
 		int height = position.bottom - position.top;
 		m_gfxScreen = CreateGfxScreen(position);
@@ -257,8 +264,9 @@ namespace car
 	{
 		m_autoControl = !m_autoControl;
 	}
-	void Scene::StartSelfTest()
+	void Scene::StartSelfTest(bool fromServer)
 	{
+		m_selfTestFromServer = fromServer;
 		m_selfTest = std::make_unique<SelfTest>(m_userCar);
 	}
 	void Scene::Frame(float deltaTime)
