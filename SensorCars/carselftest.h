@@ -22,6 +22,7 @@ namespace car
 		UINT m_currentTest;
 		UINT m_testFailed;
 		mth::float3 m_lastPosition;
+		mth::float3 m_lastRotation;
 		float m_speed;
 		float m_steering;
 		bool m_finished;

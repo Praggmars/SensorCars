@@ -38,7 +38,7 @@ namespace car
 	{
 		if (!(m_testProgress & (UINT)TestPartFlag::RIGHT_STEER))
 		{
-			m_lastPosition = m_testSubject.position;
+			m_lastRotation = m_testSubject.rotation;
 			m_testSubject.setSpeed(m_speed);
 			m_testSubject.setSteering(-m_steering);
 			m_testProgress |= (UINT)TestPartFlag::RIGHT_STEER;
@@ -46,16 +46,16 @@ namespace car
 		else
 		{
 			if (m_testSubject.getSteering() != -m_steering ||
-				m_lastPosition == m_testSubject.position)
+				m_lastRotation == m_testSubject.rotation)
 				m_testFailed |= (UINT)TestPartFlag::RIGHT_STEER;
-			m_lastPosition = m_testSubject.position;
+			m_lastRotation = m_testSubject.rotation;
 		}
 	}
 	void SelfTest::LeftSteerTest()
 	{
 		if (!(m_testProgress & (UINT)TestPartFlag::LEFT_STEER))
 		{
-			m_lastPosition = m_testSubject.position;
+			m_lastRotation = m_testSubject.rotation;
 			m_testSubject.setSpeed(-m_speed);
 			m_testSubject.setSteering(m_steering);
 			m_testProgress |= (UINT)TestPartFlag::LEFT_STEER;
@@ -63,9 +63,9 @@ namespace car
 		else
 		{
 			if (m_testSubject.getSteering() != m_steering ||
-				m_lastPosition == m_testSubject.position)
+				m_lastRotation == m_testSubject.rotation)
 				m_testFailed |= (UINT)TestPartFlag::LEFT_STEER;
-			m_lastPosition = m_testSubject.position;
+			m_lastRotation = m_testSubject.rotation;
 		}
 	}
 	void SelfTest::LightSensorTest()
